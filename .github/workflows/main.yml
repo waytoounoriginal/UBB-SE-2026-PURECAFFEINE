@@ -1,0 +1,30 @@
+name: Code Formatting Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  # Allows you to run this manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  check-format:
+    runs-on: windows-latest # Better for WinUI 3 compatibility
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # Match this to your project version
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Verify Formatting
+        # This command checks against .editorconfig without making changes
+        # It returns a non-zero exit code if it finds violations
+        run: dotnet format --verify-no-changes --no-restore --verbosity diagnostic
