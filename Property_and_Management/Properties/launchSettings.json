@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Property_and_Management (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Property_and_Management (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
