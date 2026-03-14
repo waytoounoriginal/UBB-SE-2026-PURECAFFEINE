@@ -13,6 +13,12 @@ insert_final_newline = true
 # C# files
 [*.cs]
 
+#### Complexity Rules ####
+
+# Cognitive complexity rule
+dotnet_diagnostic.S3776.severity = error
+sonar_cognitive_complexity_threshold = 15
+
 #### .NET Code Actions ####
 
 # Type members
