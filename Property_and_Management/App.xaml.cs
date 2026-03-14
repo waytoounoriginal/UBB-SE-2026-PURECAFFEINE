@@ -35,7 +35,7 @@ namespace Property_and_Management
         public App()
         {
             InitializeComponent();
-            // This is to thest the capabilities of branch protection
+            // This is to test the capabilities of branch protection
         }
 
         /// <summary>
