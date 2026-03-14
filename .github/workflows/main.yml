@@ -22,7 +22,10 @@ jobs:
           dotnet-version: '8.0.x' # Match this to your project version
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: |
+          Get-ChildItem -Recurse -Filter *.sln | ForEach-Object {
+              dotnet restore $_.FullName
+          }
 
       - name: Verify Formatting
         shell: pwsh
