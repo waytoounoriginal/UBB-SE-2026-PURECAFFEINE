@@ -25,9 +25,8 @@ jobs:
         run: dotnet restore
 
       - name: Verify Formatting
-        # This command checks against .editorconfig without making changes
-        # It returns a non-zero exit code if it finds violations
+        shell: pwsh
         run: |
-        Get-ChildItem -Recurse -Filter *.sln | ForEach-Object {
-            dotnet format $_.FullName --verify-no-changes --no-restore --verbosity diagnostic
-        }
+          Get-ChildItem -Recurse -Filter *.sln | ForEach-Object {
+              dotnet format $_.FullName --verify-no-changes --no-restore --verbosity diagnostic
+          }
