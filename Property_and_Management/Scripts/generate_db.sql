@@ -61,7 +61,8 @@ BEGIN
         CONSTRAINT PK_Request PRIMARY KEY (request_id),
         CONSTRAINT FK_Request_Game FOREIGN KEY (game_id) REFERENCES Games(game_id),
         CONSTRAINT FK_Request_Renter FOREIGN KEY (renter_id) REFERENCES [User](id),
-        CONSTRAINT FK_Request_Owner FOREIGN KEY (owner_id) REFERENCES [User](id)
+        CONSTRAINT FK_Request_Owner FOREIGN KEY (owner_id) REFERENCES [User](id),
+        CONSTRAINT CHK_Request_DateRange CHECK (end_date >= start_date)
     );
 END;
 
@@ -79,7 +80,8 @@ BEGIN
         CONSTRAINT PK_Rentals PRIMARY KEY (rental_id),
         CONSTRAINT FK_Rentals_Game FOREIGN KEY (game_id) REFERENCES Games(game_id),
         CONSTRAINT FK_Rentals_Renter FOREIGN KEY (renter_id) REFERENCES [User](id),
-        CONSTRAINT FK_Rentals_Owner FOREIGN KEY (owner_id) REFERENCES [User](id)
+        CONSTRAINT FK_Rentals_Owner FOREIGN KEY (owner_id) REFERENCES [User](id),
+        CONSTRAINT CHK_Rentals_DateRange CHECK (end_date >= start_date)
     );
 END;
 
