@@ -12,7 +12,7 @@ namespace Property_and_Management.src.Model
     public class Request : IEntity
     {
         [SqlTableFieldDefinition("request_id", IsPrimaryKey = true)]
-        public int Id { get; set;  }
+        public int Id { get; set; }
 
         [SqlTableFieldDefinition("game_id")]
 

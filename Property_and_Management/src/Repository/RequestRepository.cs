@@ -13,7 +13,7 @@ namespace Property_and_Management.src.Repository
 {
     public class RequestRepository : DatabaseRepository<Request>
     {
-        public void  Add(Request entity, SqlConnection connection, SqlTransaction transaction)
+        public void Add(Request entity, SqlConnection connection, SqlTransaction transaction)
         {
             using var command = new SqlCommand("", connection, transaction);
             string query = SqlQueryHelper<Request>.CreateInsertQuery(command, entity);
