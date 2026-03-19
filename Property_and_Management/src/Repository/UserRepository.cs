@@ -1,11 +1,11 @@
-using Microsoft.Data.SqlClient;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Configuration;
 using System.Linq;
+using Microsoft.Data.SqlClient;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 
 namespace Property_and_Management.src.Repository
 {
@@ -22,7 +22,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT id FROM Users";
+                    command.CommandText = "SELECT * FROM Users";
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -80,7 +80,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT id FROM Users WHERE id = @id";
+                    command.CommandText = "SELECT * FROM Users WHERE id = @id";
                     command.Parameters.AddWithValue("@id", id);
                     using (var reader = command.ExecuteReader())
                     {

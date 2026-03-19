@@ -1,9 +1,9 @@
-using Microsoft.Data.SqlClient;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Microsoft.Data.SqlClient;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 
 namespace Property_and_Management.src.Repository
 {
@@ -20,7 +20,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT game_id, owner_id, name, price, minimum_player_number, maximum_player_number, description, image, is_active FROM Games";
+                    command.CommandText = "SELECT * FROM Games";
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -65,7 +65,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT game_id, owner_id, name, price, minimum_player_number, maximum_player_number, description, image, is_active FROM Games WHERE owner_id = @owner_id";
+                    command.CommandText = "SELECT * FROM Games WHERE owner_id = @owner_id";
                     command.Parameters.AddWithValue("@owner_id", ownerId);
                     using (var reader = command.ExecuteReader())
                     {
@@ -110,7 +110,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT game_id, owner_id, name, price, minimum_player_number, maximum_player_number, description, image, is_active FROM Games WHERE game_id = @id";
+                    command.CommandText = "SELECT * FROM Games WHERE game_id = @id";
                     command.Parameters.AddWithValue("@id", id);
                     using (var reader = command.ExecuteReader())
                     {

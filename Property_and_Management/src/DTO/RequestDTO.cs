@@ -1,13 +1,14 @@
-using Property_and_Management.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 
 namespace Property_and_Management.src.DTO
 {
-    public class RequestDTO
+    public class RequestDTO : IDTO<Request>
     {
         public int Id { get; set; }
         public Game Game { get; set; }
@@ -41,6 +42,16 @@ namespace Property_and_Management.src.DTO
         public Request ToModel()
         {
             return new Request(Id, Game, Renter, Owner, StartDate, EndDate);
+        }
+
+        public static IDTO<Request> FromModel(Request model)
+        {
+            if (model == null)
+            {
+                throw new ArgumentNullException("model");
+            }
+
+            return new RequestDTO(model);
         }
     }
 }

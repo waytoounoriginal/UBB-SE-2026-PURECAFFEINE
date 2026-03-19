@@ -1,9 +1,9 @@
-using Microsoft.Data.SqlClient;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Microsoft.Data.SqlClient;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 
 namespace Property_and_Management.src.Repository
 {
@@ -20,7 +20,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT notification_id, user_id, timestamp, title, body FROM Notifications";
+                    command.CommandText = "SELECT * FROM Notifications";
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -94,7 +94,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT notification_id, user_id, timestamp, title, body FROM Notifications WHERE notification_id = @id";
+                    command.CommandText = "SELECT * FROM Notifications WHERE notification_id = @id";
                     command.Parameters.AddWithValue("@id", id);
                     using (var reader = command.ExecuteReader())
                     {
@@ -117,7 +117,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT notification_id, user_id, timestamp, title, body FROM Notifications WHERE user_id = @user_id";
+                    command.CommandText = "SELECT * FROM Notifications WHERE user_id = @user_id";
                     command.Parameters.AddWithValue("@user_id", userId);
                     using (var reader = command.ExecuteReader())
                     {

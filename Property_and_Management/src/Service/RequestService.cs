@@ -1,10 +1,10 @@
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Property_and_Management.src.DTO;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 
 namespace Property_and_Management.src.Service
 {

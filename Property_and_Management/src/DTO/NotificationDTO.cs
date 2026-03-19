@@ -1,9 +1,10 @@
-using Property_and_Management.src.Model;
 using System;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 
 namespace Property_and_Management.src.DTO
 {
-    public class NotificationDTO
+    public class NotificationDTO : IDTO<Notification>
     {
         public int Id { get; set; }
         public User User { get; set; }
@@ -40,9 +41,14 @@ namespace Property_and_Management.src.DTO
             return new Notification(Id, User, Timestamp, Title, Body);
         }
 
-        public static NotificationDTO FromModel(Notification model)
+        public static IDTO<Notification> FromModel(Notification model)
         {
-            return model == null ? null : new NotificationDTO(model);
+            if (model == null)
+            {
+                throw new ArgumentNullException("model");
+            }
+
+            return new NotificationDTO(model);
         }
     }
 }

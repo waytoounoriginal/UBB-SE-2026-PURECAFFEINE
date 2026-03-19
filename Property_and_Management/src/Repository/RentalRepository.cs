@@ -1,9 +1,9 @@
-using Microsoft.Data.SqlClient;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Microsoft.Data.SqlClient;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 
 namespace Property_and_Management.src.Repository
 {
@@ -20,7 +20,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT rental_id, game_id, renter_id, owner_id, start_date, end_date FROM Rentals";
+                    command.CommandText = "SELECT * FROM Rentals";
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -64,7 +64,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT rental_id, game_id, renter_id, owner_id, start_date, end_date FROM Rentals WHERE owner_id = @owner_id";
+                    command.CommandText = "SELECT * FROM Rentals WHERE owner_id = @owner_id";
                     command.Parameters.AddWithValue("@owner_id", ownerId);
                     using (var reader = command.ExecuteReader())
                     {
@@ -90,7 +90,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT rental_id, game_id, renter_id, owner_id, start_date, end_date FROM Rentals WHERE renter_id = @renter_id";
+                    command.CommandText = "SELECT * FROM Rentals WHERE renter_id = @renter_id";
                     command.Parameters.AddWithValue("@renter_id", renterId);
                     using (var reader = command.ExecuteReader())
                     {
@@ -116,7 +116,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT rental_id, game_id, renter_id, owner_id, start_date, end_date FROM Rentals WHERE game_id = @game_id";
+                    command.CommandText = "SELECT * FROM Rentals WHERE game_id = @game_id";
                     command.Parameters.AddWithValue("@game_id", gameId);
                     using (var reader = command.ExecuteReader())
                     {
@@ -176,7 +176,7 @@ namespace Property_and_Management.src.Repository
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT rental_id, game_id, renter_id, owner_id, start_date, end_date FROM Rentals WHERE rental_id = @id";
+                    command.CommandText = "SELECT * FROM Rentals WHERE rental_id = @id";
                     command.Parameters.AddWithValue("@id", id);
                     using (var reader = command.ExecuteReader())
                     {
