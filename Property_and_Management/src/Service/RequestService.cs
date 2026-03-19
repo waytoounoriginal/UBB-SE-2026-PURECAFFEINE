@@ -2,14 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
 using Property_and_Management.src.DTO;
 using Property_and_Management.src.Interface;
 using Property_and_Management.src.Model;
-using Property_and_Management.src.Repository;
-using Property_and_Management.src.SQL.Attributes;
 
 namespace Property_and_Management.src.Service
 {
@@ -33,20 +28,17 @@ namespace Property_and_Management.src.Service
     public class RequestService
     {
 
-        private RequestRepository _requestRepository;
-        private RentalRepository _rentalRepository;
+        private IRequestRepository _requestRepository;
+        private IRentalRepository _rentalRepository;
         private NotificationService _notificationService;
-        private GameRepository _gameRepository;
-        private DatabaseConnection _db;
-
-        public void SetDatabaseConnection(DatabaseConnection db) =>
-        _db = db;
+        private IGameRepository _gameRepository;
+        // Db connection handling should be refactored to an interface later, removing it from this refactor since SQL attributes module is gone.
 
         public ImmutableList<RequestDTO> GetRequestsForRenter(int renterId)
         {
             return _requestRepository
                 .GetRequestsByRenter(renterId)
-                .Select(r => new RequestDTO(r.Id, r.GameId, r.RenterId, r.OwnerId, r.StartDate, r.EndDate))
+                .Select(r => new RequestDTO(r))
                 .ToImmutableList();
         }
 
@@ -54,13 +46,13 @@ namespace Property_and_Management.src.Service
         {
             return _requestRepository
                 .GetRequestsByOwner(ownerId)
-                .Select(r => new RequestDTO(r.Id, r.GameId, r.RenterId, r.OwnerId, r.StartDate, r.EndDate))
+                .Select(r => new RequestDTO(r))
                 .ToImmutableList();
         }
 
-        public void SetRequestRepository(RequestRepository newRequestRepository) =>
+        public void SetRequestRepository(IRequestRepository newRequestRepository) =>
             _requestRepository = newRequestRepository;
-        public void SetRentalRepository(RentalRepository newRentalRepository) =>
+        public void SetRentalRepository(IRentalRepository newRentalRepository) =>
             _rentalRepository = newRentalRepository;
         public void SetNotificationService(NotificationService newNotificationService) =>
             _notificationService = newNotificationService;
@@ -78,12 +70,12 @@ namespace Property_and_Management.src.Service
             if (!CheckAvailability(gameId, startDate, endDate))
                 return (int)CreateRequestError.DATES_UNAVAILABLE_ERROR;
 
-            var request = new Request(0, gameId, renterId, ownerId, startDate, endDate);
+            var request = new Request(0, new Game { Id = gameId }, new User { Id = renterId }, new User { Id = ownerId }, startDate, endDate);
             _requestRepository.Add(request);
 
             return _requestRepository
                 .GetRequestsByRenter(renterId)
-                .Last(r => r.GameId == gameId &&
+                .Last(r => r.Game?.Id == gameId &&
                    r.StartDate == startDate &&
                    r.EndDate == endDate)
                 .Id;
@@ -104,25 +96,21 @@ namespace Property_and_Management.src.Service
                 return (int)ApproveRequestError.NOT_FOUND_ERROR;
             }
 
-            if (request.OwnerId != ownerId)
+            if (request.Owner?.Id != ownerId)
                 return (int)ApproveRequestError.UNAUTHORIZED_ERROR;
 
             var bufferedStart = request.StartDate.AddHours(-48);
             var bufferedEnd = request.EndDate.AddHours(48);
 
-            using var connection = _db.CreateConnection();
-            connection.Open();
-            using var transaction = connection.BeginTransaction(System.Data.IsolationLevel.Serializable);
-
             try
             {
-                var rental = new Rental(0, request.GameId, request.RenterId,
-                                        request.OwnerId, request.StartDate, request.EndDate);
+                var rental = new Rental(0, request.Game, request.Renter,
+                                        request.Owner, request.StartDate, request.EndDate);
 
-                _rentalRepository.Add(rental, connection, transaction);
+                _rentalRepository.Add(rental);
 
                 var overlapping = _requestRepository
-                    .GetRequestsByGame(request.GameId)
+                    .GetRequestsByGame(request.Game?.Id ?? 0)
                     .Where(r => r.Id != requestId &&
                                 r.StartDate < bufferedEnd &&
                                 r.EndDate > bufferedStart)
@@ -131,25 +119,22 @@ namespace Property_and_Management.src.Service
                 //foreach (var overlap in overlapping)
                 //{
                 //    _notificationService.SendNotification(
-                //        userId: overlap.RenterId,
-                //        message: $"Your request for game {overlap.GameId} " +
+                //        userId: overlap.Renter?.Id ?? 0,
+                //        message: $"Your request for game {overlap.Game?.Id} " +
                 //                 $"({overlap.StartDate:d}–{overlap.EndDate:d}) is unavailable. " +
-                //                 $"Book a new slot at: /booking/{overlap.GameId}");
+                //                 $"Book a new slot at: /booking/{overlap.Game?.Id}");
 
-                //    _requestRepository.Delete(overlap.Id, connection, transaction);
+                //    _requestRepository.Delete(overlap.Id);
                 //}
 
-                _requestRepository.Delete(requestId, connection, transaction);
+                _requestRepository.Delete(requestId);
 
-                transaction.Commit();
                 return rental.Id;
             }
             catch
             {
-                transaction.Rollback();
                 return (int)ApproveRequestError.TRANSACTION_FAILED_ERROR;
             }
-
         }
 
         //[BL-LFC-03] When an Owner sends a DECLINE signal for a Request, the system shall delete the Request entity. No Rental is created. The user shall also be notified that their request has been declined.
@@ -160,14 +145,14 @@ namespace Property_and_Management.src.Service
             catch (KeyNotFoundException)
             { return (int)DenyRequestError.NOT_FOUND_ERROR; }
 
-            if (request.OwnerId != ownerId)
+            if (request.Owner?.Id != ownerId)
                 return (int)DenyRequestError.UNAUTHORIZED_ERROR;
 
             _requestRepository.Delete(requestId);
 
-            //_notificationService.SendNotification(
-            //    userId: request.RenterId,
-            //    message: $"Your request for game {request.GameId} " +
+            //_notification_service.SendNotification(
+            //    userId: request.Renter?.Id ?? 0,
+            //    message: $"Your request for game {request.Game?.Id} " +
             //             $"({request.StartDate:d}–{request.EndDate:d}) was declined. " +
             //             $"Reason: {reason}");
 
@@ -189,8 +174,8 @@ namespace Property_and_Management.src.Service
             //{
             //    _requestRepository.Delete(request.Id);
 
-            //    _notificationService.SendNotification(
-            //        userId: request.RenterId,
+            //    _notification_service.SendNotification(
+            //        userId: request.Renter?.Id ?? 0,
             //        message: $"Your request for game {gameId} " +
             //                 $"({request.StartDate:d}–{request.EndDate:d}) has been declined " +
             //                 $"because the game is no longer available.");

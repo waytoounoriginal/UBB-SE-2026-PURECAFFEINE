@@ -1,56 +1,28 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Property_and_Management.src.Attributes;
 using Property_and_Management.src.Interface;
 
 namespace Property_and_Management.src.Model
 {
-    [SqlTableDefinition("Requests")]
     public class Request : IEntity
     {
-        [SqlTableFieldDefinition("request_id", IsPrimaryKey = true)]
         public int Id { get; set; }
-
-        [SqlTableFieldDefinition("game_id")]
-
-        public int GameId { get; set; }
-
-        [SqlTableFieldDefinition("renter_id")]
-        public int RenterId { get; set; }
-
-        [SqlTableFieldDefinition("owner_id")]
-        public int OwnerId { get; set; }
-
-        [SqlTableFieldDefinition("start_date")]
+        public Game Game { get; set; }
+        public User Renter { get; set; }
+        public User Owner { get; set; }
         public DateTime StartDate { get; set; }
-
-        [SqlTableFieldDefinition("end_date")]
         public DateTime EndDate { get; set; }
 
-        public Request(int id, int gameId, int renterId, int ownerId, DateTime startDate, DateTime endDate)
+
+        public Request() { }
+
+        public Request(int id, Game game, User renter, User owner, DateTime startDate, DateTime endDate)
         {
             Id = id;
-            GameId = gameId;
-            RenterId = renterId;
-            OwnerId = ownerId;
+            Game = game;
+            Renter = renter;
+            Owner = owner;
             StartDate = startDate;
             EndDate = endDate;
-        }
-
-        public static IEntity BuildFromParameters(Dictionary<string, object> parameters)
-        {
-            return new Request(
-                id: (int)parameters["request_id"],
-                gameId: (int)parameters["game_id"],
-                renterId: (int)parameters["renter_id"],
-                ownerId: (int)parameters["owner_id"],
-                startDate: (DateTime)parameters["start_date"],
-                endDate: (DateTime)parameters["end_date"]
-                );
-
         }
     }
 }

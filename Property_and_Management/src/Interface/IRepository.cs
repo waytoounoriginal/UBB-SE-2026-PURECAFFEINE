@@ -13,23 +13,20 @@ namespace Property_and_Management.src.Interface
         /// <summary>
         /// Retrieves all items in the collection as an immutable list.
         /// </summary>
-        /// <returns>An <see cref="ImmutableList{T}"/> containing all items in the collection. The list will be empty if the
-        /// collection contains no items.</returns>
+        /// <returns>An <see cref="ImmutableList{T}"/> of all items; empty if none exist.</returns>
         ImmutableList<T> GetAll();
 
         /// <summary>
         /// Adds the specified entity to the collection.
         /// </summary>
-        /// <param name="newEntity">The entity to add to the collection. Cannot be null.</param>
+        /// <param name="newEntity">The entity to add. Cannot be null.</param>
         void Add(T newEntity);
 
         /// <summary>
         /// Removes and returns the entity with the specified identifier from the repository.
         /// </summary>
         /// <param name="removedEntityId">The identifier of the entity to remove.</param>
-        /// <returns>
-        /// The removed entity instance.
-        /// </returns>
+        /// <returns>The removed entity instance.</returns>
         T Delete(int removedEntityId);
 
         /// <summary>

@@ -10,8 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQL_UnitTests", "..\SQL_UnitTests\SQL_UnitTests.csproj", "{D6694DD1-5767-4142-8805-F8AB7108C32D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -40,18 +38,6 @@ Global
 		{705006EA-BFDA-4377-8C8A-E748A4C6F4D8}.Release|x86.ActiveCfg = Release|x86
 		{705006EA-BFDA-4377-8C8A-E748A4C6F4D8}.Release|x86.Build.0 = Release|x86
 		{705006EA-BFDA-4377-8C8A-E748A4C6F4D8}.Release|x86.Deploy.0 = Release|x86
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Debug|x64.Build.0 = Debug|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Debug|x86.Build.0 = Debug|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Release|ARM64.Build.0 = Release|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Release|x64.ActiveCfg = Release|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Release|x64.Build.0 = Release|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Release|x86.ActiveCfg = Release|Any CPU
-		{D6694DD1-5767-4142-8805-F8AB7108C32D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

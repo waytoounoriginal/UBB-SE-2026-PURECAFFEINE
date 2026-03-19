@@ -22,19 +22,19 @@ namespace Property_and_Management.src.Service
 
         public NotificationDTO DeleteNotificationById(int id)
         {
-            return NotificationDTO.FromModel(_notificationRepository.Delete(id));
+            return (NotificationDTO)NotificationDTO.FromModel(_notificationRepository.Delete(id));
         }
 
         public NotificationDTO GetNotificationById(int id)
         {
-            return NotificationDTO.FromModel(_notificationRepository.Get(id));
+            return (NotificationDTO)NotificationDTO.FromModel(_notificationRepository.Get(id));
         }
 
         public ImmutableList<NotificationDTO> GetNotificationsForUser(int userId)
         {
             return _notificationRepository
                 .GetNotificationsByUser(userId)
-                .Select(entity => NotificationDTO.FromModel(entity))
+                .Select(entity => (NotificationDTO)NotificationDTO.FromModel(entity))
                 .ToImmutableList();
         }
 
