@@ -1,11 +1,9 @@
+using Microsoft.Data.SqlClient;
+using Property_and_Management.src.Interface;
+using Property_and_Management.src.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Configuration;
-using Microsoft.Data.SqlClient;
-using System.Linq;
-using Property_and_Management.src.Model;
-using Property_and_Management.src.Interface;
 
 namespace Property_and_Management.src.Repository
 {

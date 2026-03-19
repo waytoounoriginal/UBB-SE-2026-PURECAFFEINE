@@ -32,8 +32,6 @@ namespace Property_and_Management
     {
         private Window? _window;
 
-        private string CONNECTION_STRING = ConfigurationManager.ConnectionStrings["BoardRent"]?.ConnectionString;
-
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().

@@ -28,7 +28,7 @@ namespace Property_and_Management.src.DTO
 
         public RequestDTO(Request request)
         {
-            if(request == null) throw new ArgumentNullException(nameof(request));
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
             Id = request.Id;
             Game = request.Game;

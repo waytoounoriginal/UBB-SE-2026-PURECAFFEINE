@@ -8,6 +8,8 @@ namespace Property_and_Management.src.Model
     {
         public int Id { get; set; }
 
+        public User() { }
+
         public User(int id)
         {
             Id = id;

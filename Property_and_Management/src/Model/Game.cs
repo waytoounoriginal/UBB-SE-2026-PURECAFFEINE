@@ -15,6 +15,8 @@ namespace Property_and_Management.src.Model
         public byte[] Image { get; set; }
         public bool IsActive { get; set; }
 
+        public Game() {}
+
         public Game(int id, User owner, string name, double price,
                     int minimumPlayerNumber, int maximumPlayerNumber,
                     string description, byte[] image, bool isActive)

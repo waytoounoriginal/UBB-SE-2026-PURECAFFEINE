@@ -12,6 +12,8 @@ namespace Property_and_Management.src.Model
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
+        public Rental() { }
+
         public Rental(int id, Game game, User renter, User owner, DateTime startDate, DateTime endDate)
         {
             Id = id;
