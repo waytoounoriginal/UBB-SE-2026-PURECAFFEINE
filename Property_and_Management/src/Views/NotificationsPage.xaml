@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Property_and_Management.src.Views.NotificationsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Property_and_Management.src.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Property_and_Management.src.Viewmodels"
+    xmlns:dto="using:Property_and_Management.src.DTO"
+    mc:Ignorable="d"
+    Title="NotificationsPage">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid>
+        <!-- Items list (no header) -->
+        <ListView x:Name="ItemsListView" ItemsSource="{Binding Notifications}" Margin="10">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="dto:NotificationDTO">
+                    <Grid ColumnDefinitions="3*,1*" Padding="8" BorderBrush="#EEE" BorderThickness="0,0,0,1">
+                        <!-- Notification column (3 parts) -->
+                        <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                            <!-- Title -->
+                            <TextBlock Text="{x:Bind Title}" FontSize="16" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+
+                            <!-- 'by <user>' on its own line, left-aligned with the title -->
+                            <TextBlock Margin="2,4,0,0" FontSize="12" Foreground="Gray">
+                                <Run Text="by " />
+                                <Run Text="{x:Bind User.Id}" />
+                            </TextBlock>
+
+                            <!-- Body under the title and by-line -->
+                            <TextBlock Text="{x:Bind Body}" FontSize="14" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        </StackPanel>
+
+                        <!-- Delete button on the right edge -->
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button Content="Delete" Click="DeleteButton_Click" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Window>
