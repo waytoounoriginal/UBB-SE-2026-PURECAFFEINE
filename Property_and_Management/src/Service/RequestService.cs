@@ -216,14 +216,17 @@ namespace Property_and_Management.src.Service
 
         public bool CheckAvailability(int gameId, DateTime startDate, DateTime endDate)
         {
-            return (endDate <= DateTime.Now.AddMonths(1) &&
-                _gameRepository
-                    .GetAll()
-                    .Count(g => g.Id == gameId && g.IsActive) > 1
-                &&
-                !_requestRepository
-                    .GetRequestsByGame(gameId)
-                    .Any(r => r.StartDate <= endDate && r.EndDate >= startDate));
+            bool dateNotTooLate = endDate <= DateTime.Now.AddMonths(1);
+
+            bool isTheGameActive = _gameRepository
+                .GetAll()
+                .Count(g => g.Id == gameId && g.IsActive) == 1;
+
+            bool inAvailableTimeInterval = !_requestRepository
+                .GetRequestsByGame(gameId)
+                .Any(r => r.StartDate <= endDate && r.EndDate >= startDate);
+
+            return dateNotTooLate && isTheGameActive && inAvailableTimeInterval;
         }
     }
 }
