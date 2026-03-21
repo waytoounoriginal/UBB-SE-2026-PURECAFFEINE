@@ -193,10 +193,10 @@ namespace Property_and_Management.src.Service
         {
             if (month == 0)
                 month = DateTime.Now.Month;
-        
+            
             if (year == 0)
                 year = DateTime.Now.Year;
-       
+            
             return _requestRepository
                 .GetRequestsByGame(gameId)
                 .Where(r => r.StartDate.Month == month && r.StartDate.Year == year)
