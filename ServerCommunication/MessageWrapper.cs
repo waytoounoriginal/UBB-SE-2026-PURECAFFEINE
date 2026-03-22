@@ -2,13 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ServerCommunication
 {
-    public class MessageWrraper
+    public class MessageWrapper
     {
         public string Type { get; set; } = "";
         public byte[] Payload { get; set; } = Array.Empty<byte>();
+
+        public byte[] Serialize()
+        {
+            return JsonSerializer.SerializeToUtf8Bytes(this);
+        }
     }
 }

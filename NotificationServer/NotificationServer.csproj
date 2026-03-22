@@ -11,4 +11,8 @@
     <Folder Include="DTO\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ServerCommunication\ServerCommunication.csproj" />
+  </ItemGroup>
+
 </Project>

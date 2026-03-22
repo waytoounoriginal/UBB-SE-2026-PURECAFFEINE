@@ -5,22 +5,20 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace ServerCommunication.Interfaces
+namespace ServerCommunication
 {
-    public interface IMessage
+    public abstract class MessageBase
     {
-        string MessageType { get; }
-
         /// <summary>
         /// Provides the MessageWrapper for a given Message
         /// </summary>
         /// <returns>A MessageWrapper instance containing the payload of the object</returns>
-        MessageWrraper ToMessage()
+        public MessageWrapper ToMessageWrapper()
         {
-            return new MessageWrraper
+            return new MessageWrapper
             {
-                Type = MessageType,
-                Payload = JsonSerializer.SerializeToUtf8Bytes(this)
+                Type = GetType().Name,
+                Payload = JsonSerializer.SerializeToUtf8Bytes((object)this)
             };
         }
     }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic;
+using ServerCommunication;
 
 namespace NotificationServer
 {
@@ -17,8 +18,64 @@ namespace NotificationServer
 
         private static UdpClient? _udpClient;
 
-        private static void HandleJsonPacket(string recivedJson)
+        private static Dictionary<int, IPEndPoint> _userIpMap = [];
+
+        private static async Task SendMessage(int userId, MessageBase unwrappedMessageToSend)
         {
+            if (_udpClient == null)
+            {
+                throw new NullReferenceException(nameof(_udpClient));
+            }
+
+            if (!_userIpMap.TryGetValue(userId, out var endpoint))
+            {
+                throw new InvalidDataException("UserId was not present in the map");
+            }
+
+            byte[] data = CommunicationHelper.SerializeMessage(unwrappedMessageToSend);
+            await _udpClient.SendAsync(data, data.Length, endpoint);
+        }
+
+        private static void HandleSubscribeToServerMessage(IPEndPoint recivedEndPoint, MessageWrapper recivedMessage)
+        {
+            SubscribeToServerMessage? message = JsonSerializer.Deserialize<SubscribeToServerMessage>(recivedMessage.Payload);
+
+            if (message == null)
+            {
+                throw new InvalidCastException("Expected message was not " + nameof(SubscribeToServerMessage));
+            }
+
+            _userIpMap[message.UserId] = recivedEndPoint;
+        }
+
+        private static async Task HandleSendNotificationMessage(MessageWrapper recivedMessage)
+        {
+            SendNotificationMessage? unwrappedMessage = JsonSerializer.Deserialize<SendNotificationMessage>(recivedMessage.Payload);
+
+            if (unwrappedMessage == null)
+            {
+                throw new InvalidCastException("Expected message was not " + nameof(SendNotificationMessage));
+            }
+
+            // Resend the UDP packet to the user id
+            await SendMessage(unwrappedMessage.UserId, unwrappedMessage);
+        }
+
+        private static async Task HandleMessagePacket(IPEndPoint recivedEndPoint, MessageWrapper recivedMessageWrapper)
+        {
+            try
+            {
+                switch (recivedMessageWrapper.Type)
+                {
+                    case nameof(SubscribeToServerMessage): HandleSubscribeToServerMessage(recivedEndPoint, recivedMessageWrapper); break;
+                    case nameof(SendNotificationMessage): await HandleSendNotificationMessage(recivedMessageWrapper); break;
+                    default: throw new InvalidDataException(recivedMessageWrapper.Type);
+                }
+            }
+            catch(Exception exception)
+            {
+                Console.WriteLine($"Recived exception while handling message: {exception.Message}");
+            }
 
         }
 
@@ -42,11 +99,20 @@ namespace NotificationServer
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // Recive the serialized object
-                    var result = await _udpClient.ReceiveAsync(cancellationToken);
+                    UdpReceiveResult result = await _udpClient.ReceiveAsync(cancellationToken);
                     string recivedJson = Encoding.UTF8.GetString(result.Buffer);
 
                     // Deserialize
-                    var recivedObject = JsonSerializer.Deserialize<dynamic>(recivedJson);
+                    MessageWrapper? recivedObject = JsonSerializer.Deserialize<MessageWrapper>(recivedJson);
+
+                    // If null drop the message, print a message
+                    if (recivedObject == null)
+                    {
+                        Console.WriteLine($"Null message recived from json: {recivedJson}");
+                        continue;
+                    }
+
+                    await HandleMessagePacket(result.RemoteEndPoint, recivedObject);
                 }
             }
             catch (OperationCanceledException)
