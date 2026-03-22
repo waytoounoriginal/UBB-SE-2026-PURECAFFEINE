@@ -38,7 +38,7 @@ namespace NotificationServer
 
         private static void HandleSubscribeToServerMessage(IPEndPoint recivedEndPoint, MessageWrapper recivedMessage)
         {
-            SubscribeToServerMessage? message = JsonSerializer.Deserialize<SubscribeToServerMessage>(recivedMessage.Payload);
+            SubscribeToServerMessage? message = recivedMessage.Deserialize<SubscribeToServerMessage>();
 
             if (message == null)
             {
@@ -50,7 +50,7 @@ namespace NotificationServer
 
         private static async Task HandleSendNotificationMessage(MessageWrapper recivedMessage)
         {
-            SendNotificationMessage? unwrappedMessage = JsonSerializer.Deserialize<SendNotificationMessage>(recivedMessage.Payload);
+            SendNotificationMessage? unwrappedMessage = recivedMessage.Deserialize<SendNotificationMessage>();
 
             if (unwrappedMessage == null)
             {
@@ -63,6 +63,7 @@ namespace NotificationServer
 
         private static async Task HandleMessagePacket(IPEndPoint recivedEndPoint, MessageWrapper recivedMessageWrapper)
         {
+            Console.WriteLine($"Got: {recivedMessageWrapper.Type}");
             try
             {
                 switch (recivedMessageWrapper.Type)
@@ -100,15 +101,14 @@ namespace NotificationServer
                 {
                     // Recive the serialized object
                     UdpReceiveResult result = await _udpClient.ReceiveAsync(cancellationToken);
-                    string recivedJson = Encoding.UTF8.GetString(result.Buffer);
 
                     // Deserialize
-                    MessageWrapper? recivedObject = JsonSerializer.Deserialize<MessageWrapper>(recivedJson);
+                    MessageWrapper? recivedObject = CommunicationHelper.GetMessageWrapper(result.Buffer);
 
                     // If null drop the message, print a message
                     if (recivedObject == null)
                     {
-                        Console.WriteLine($"Null message recived from json: {recivedJson}");
+                        Console.WriteLine($"Null message recived from json: {Encoding.UTF8.GetString(result.Buffer)}");
                         continue;
                     }
 

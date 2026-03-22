@@ -34,5 +34,21 @@ namespace Property_and_Management.src.Interface
         /// <param name="userId">The identifier of the user.</param>
         /// <returns>A list of <see cref="NotificationDTO"/> objects for the specified user.</returns>
         ImmutableList<NotificationDTO> GetNotificationsForUser(int userId);
+
+        /// <summary>
+        /// Subscribes to recive notifications for the given userId
+        /// </summary>
+        /// <param name="userId"></param>
+        void SubscribeToServer(int userId);
+
+        /// <summary>
+        /// Starts the listening on the client
+        /// </summary>
+        void StartListening();
+
+        /// <summary>
+        /// Stops the listening on the client
+        /// </summary>
+        void StopListening();
     }
 }

@@ -46,13 +46,15 @@
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.5" />
     </ItemGroup>
     <ItemGroup>
-		<Folder Include="NotificationServer.TestClient\" />
-		<Folder Include="NotificationServer\" />
-	    <Folder Include="src\Views\" />
-	    <ProjectReference Include="..\ServerCommunication\ServerCommunication.csproj" />
-		<Page Update="src\Views\NotificationsPage.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</Page>
+<<<<<<< HEAD
+      <Folder Include="NotificationServer.TestClient\" />
+      <Folder Include="NotificationServer\" />
+      <Folder Include="src\Views\" />
+=======
+      <Page Update="src\Views\NotificationsPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </Page>
+>>>>>>> ffb9b42 (Initial MVVM, change later)
     </ItemGroup>
 
     <!--

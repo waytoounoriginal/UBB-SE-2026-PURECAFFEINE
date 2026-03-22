@@ -52,13 +52,22 @@ namespace Property_and_Management
             _notificationService = new NotificationService(_notificationRepository);
             _notificationsViewModel = new NotificationsViewModel(_notificationService);
 
-            // Start the listener on notifications
-            _notificationService.StartListening();
 
-            // Subscribe to the userId 1
-            _notificationService.SubscribeToServer(userId: 1);
-                
             InitializeComponent();
+<<<<<<< HEAD
+
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                // Notification test = new Notification(1, 1, DateTime.Now, "hello2", "world2");
+
+                // string t = SqlQueryHelper<Notification>.CreateInsertQuery(cmd, test, false);
+                // Dbrepo test
+                NotificationRepository notificationRepository = new NotificationRepository();
+
+                //Console.WriteLine(notificationRepository.Get(3));
+            }
+=======
+>>>>>>> ffb9b42 (Initial MVVM, change later)
         }
 
         /// <summary>

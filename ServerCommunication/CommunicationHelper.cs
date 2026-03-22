@@ -13,5 +13,14 @@ namespace ServerCommunication
         {
             return JsonSerializer.SerializeToUtf8Bytes(message.ToMessageWrapper());
         }
+
+        public static MessageWrapper? GetMessageWrapper(byte[] resultBytes)
+        {
+            string recivedJson = Encoding.UTF8.GetString(resultBytes);
+
+            // Deserialize
+            return JsonSerializer.Deserialize<MessageWrapper>(recivedJson);
+        }
+        
     }
 }
