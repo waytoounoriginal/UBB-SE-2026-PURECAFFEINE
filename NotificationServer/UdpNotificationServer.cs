@@ -72,7 +72,7 @@ namespace NotificationServer
                     default: throw new InvalidDataException(recivedMessageWrapper.Type);
                 }
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 Console.WriteLine($"Recived exception while handling message: {exception.Message}");
             }
