@@ -10,8 +10,19 @@ namespace Property_and_Management.src.Repository
     public class RentalRepository : IRentalRepository
     {
         private readonly string _connectionString =
-            System.Configuration.ConfigurationManager.ConnectionStrings["BoardRent"]?.ConnectionString ?? string.Empty;
+            System.Configuration.ConfigurationManager.ConnectionStrings["BoardRent"]?.ConnectionString ?? string.Empty
 
+        private Rental MapRowToRental(SqlDataReader reader)
+        {
+            return new Rental(
+                (int)reader["rental_id"],
+                new Game { Id = (int)reader["game_id"] },
+                new User((int)reader["renter_id"]),
+                new User((int)reader["owner_id"]),
+                (DateTime)reader["start_date"],
+                (DateTime)reader["end_date"]
+            );
+        }
         public ImmutableList<Rental> GetAll()
         {
             var list = new List<Rental>();
@@ -23,22 +34,20 @@ namespace Property_and_Management.src.Repository
                     command.CommandText = "SELECT * FROM Rentals";
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader.Read())
-                        {
-                            var game = new Game { Id = (int)reader["game_id"] };
-                            var renter = new User((int)reader["renter_id"]);
-                            var owner = new User((int)reader["owner_id"]);
-                            var rent = new Rental((int)reader["rental_id"], game, renter, owner, (DateTime)reader["start_date"], (DateTime)reader["end_date"]);
-                            list.Add(rent);
-                        }
+                        while (reader.Read()) list.Add(MapRowToRental(reader));
                     }
                 }
             }
             return list.ToImmutableList();
         }
 
+
         public void Add(Rental entity)
         {
+            // [ENT-REN-02] The system shall enforce that end_date is strictly after start_date for every Rental.
+            if (entity.EndDate <= entity.StartDate)
+                throw new ArgumentException("End date must be strictly after start date [ENT-REN-02].");
+
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
@@ -134,20 +143,10 @@ namespace Property_and_Management.src.Repository
             return list.ToImmutableList();
         }
 
+        // [ENT-REN-05] Rental records shall never be deleted.
         public Rental Delete(int removedEntityId)
         {
-            var entity = Get(removedEntityId);
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "DELETE FROM Rentals WHERE rental_id = @id";
-                    command.Parameters.AddWithValue("@id", removedEntityId);
-                    command.ExecuteNonQuery();
-                }
-            }
-            return entity;
+            throw new NotSupportedException("Rental records constitute a historical log and cannot be deleted [ENT-REN-05].");
         }
 
         public void Update(int updatedEntityId, Rental newEntity)
@@ -180,13 +179,8 @@ namespace Property_and_Management.src.Repository
                     command.Parameters.AddWithValue("@id", id);
                     using (var reader = command.ExecuteReader())
                     {
-                        if (reader.Read())
-                        {
-                            var game = new Game { Id = (int)reader["game_id"] };
-                            var renter = new User((int)reader["renter_id"]);
-                            var owner = new User((int)reader["owner_id"]);
-                            return new Rental((int)reader["rental_id"], game, renter, owner, (DateTime)reader["start_date"], (DateTime)reader["end_date"]);
-                        }
+                        if (reader.Read()) return MapRowToRental(reader);
+                        throw new KeyNotFoundException();
                     }
                 }
             }
