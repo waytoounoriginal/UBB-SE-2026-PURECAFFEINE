@@ -12,6 +12,9 @@ namespace Property_and_Management.src.DTO
         public string Title { get; set; }
         public string Body { get; set; }
 
+        // Formatted time string for UI binding
+        public string TimeDisplay => Timestamp.ToString("hh:mm tt");
+
         public NotificationDTO()
         {
         }

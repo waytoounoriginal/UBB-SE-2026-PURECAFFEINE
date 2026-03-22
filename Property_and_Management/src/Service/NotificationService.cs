@@ -4,21 +4,35 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.UI.Composition;
 using Property_and_Management.src.DTO;
 using Property_and_Management.src.Interface;
 using Property_and_Management.src.Model;
 using Property_and_Management.src.Repository;
+using Property_and_Management.src.Service.Listeners;
+using ServerCommunication;
+using Windows.UI.Notifications;
+using Microsoft.Windows.AppNotifications;
+using Microsoft.Windows.AppNotifications.Builder;
+using Property_and_Management.src.Views;
 
 namespace Property_and_Management.src.Service
 {
-    public class NotificationService : INotificationService
+    public class NotificationService : INotificationService, IObserver<MessageBase>, IObservable<NotificationDTO>
     {
         private readonly NotificationRepository _notificationRepository;
+
+        private IServerClient _serverClient;
+        private List<IObserver<NotificationDTO>> _subscribers = [];
 
         public NotificationService(NotificationRepository notificationRepository)
         {
             _notificationRepository = notificationRepository;
+            _serverClient = new NotificationClient();
+
+            _serverClient.Subscribe(this);
         }
+
 
         public NotificationDTO DeleteNotificationById(int id)
         {
@@ -40,12 +54,77 @@ namespace Property_and_Management.src.Service
 
         public void SendNotificationToUser(int userId, NotificationDTO notification)
         {
-            throw new NotImplementedException();
+            _serverClient.SendNotification(userId, notification.Title, notification.Body);
         }
 
         public void UpdateNotificationById(int id, NotificationDTO notification)
         {
             _notificationRepository.Update(id, notification.ToModel());
+        }
+
+        public void StartListening()
+        {
+            _serverClient.ListenAsync();
+        }
+
+        public void StopListening()
+        {
+            _serverClient.StopListening();
+        }
+
+        public void OnCompleted()
+        {
+            // throw new NotImplementedException();
+        }
+
+        public void OnError(Exception error)
+        {
+            // throw new NotImplementedException();
+        }
+
+        public void OnNext(MessageBase value)
+        {
+            // Notify all subscribers
+            // only SendNotificationMessage is supported
+            if (value is SendNotificationMessage message)
+            {
+                NotificationDTO notificationDTO = new NotificationDTO
+                {
+                    Timestamp = message.Timestamp,
+                    Title = message.Title,
+                    Body = message.Body,
+                };
+
+                foreach (var subscriber in _subscribers)
+                {
+                    subscriber.OnNext(notificationDTO);
+                }
+
+                // Display a system notification
+                ShowWindowsNotification(message.Title, message.Body);
+            }
+        }
+
+        public IDisposable Subscribe(IObserver<NotificationDTO> observer)
+        {
+            _subscribers.Add(observer);
+            return null;
+        }
+
+        private void ShowWindowsNotification(string title, string body)
+        {
+            var notification = new AppNotificationBuilder()
+                .AddArgument("navigate", nameof(NotificationsPage))
+                .AddText(title)
+                .AddText(body)
+                .BuildNotification();
+
+            AppNotificationManager.Default.Show(notification);
+        }
+
+        public void SubscribeToServer(int userId)
+        {
+            _serverClient.SubscribeToServer(userId);
         }
     }
 }

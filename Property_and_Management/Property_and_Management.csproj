@@ -3,6 +3,13 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
         <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+
+        <AppxPackage>false</AppxPackage>
+        <WindowsPackageType>None</WindowsPackageType>
+
+        <PlatformTarget>x64</PlatformTarget>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
         <RootNamespace>Property_and_Management</RootNamespace>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <Platforms>x86;x64;ARM64</Platforms>
@@ -12,6 +19,9 @@
         <EnableMsixTooling>true</EnableMsixTooling>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+    <ItemGroup>
+      <None Remove="src\Views\NotificationsPage.xaml" />
+    </ItemGroup>
 
     <ItemGroup>
         <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -37,14 +47,21 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
         <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260209005" />
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.5" />
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="NotificationServer.TestClient\" />
-      <Folder Include="NotificationServer\" />
-      <Folder Include="src\Views\" />
+		<Folder Include="NotificationServer.TestClient\" />
+		<Folder Include="NotificationServer\" />
+	    <ProjectReference Include="..\ServerCommunication\ServerCommunication.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Page Update="src\Views\NotificationsPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </Page>
     </ItemGroup>
 
     <!--

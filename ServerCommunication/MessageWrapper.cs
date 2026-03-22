@@ -16,5 +16,10 @@ namespace ServerCommunication
         {
             return JsonSerializer.SerializeToUtf8Bytes(this);
         }
+
+        public T? Deserialize<T>() where T : MessageBase
+        {
+            return JsonSerializer.Deserialize<T>(Payload);
+        }
     }
 }

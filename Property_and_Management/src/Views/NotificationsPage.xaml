@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Property_and_Management.src.Views.NotificationsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Property_and_Management.src.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:dto="using:Property_and_Management.src.DTO"
+    mc:Ignorable="d">
+
+    <Grid Padding="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8" VerticalAlignment="Center">
+            <TextBlock Text="My Notifications" FontSize="20" FontWeight="Bold" />
+        </StackPanel>
+
+        <!-- Table header -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid ColumnDefinitions="48,*,200,56" Background="#F6F6F6" Padding="8" Grid.Row="0">
+                <TextBlock Grid.Column="0" Text="" />
+                <TextBlock Grid.Column="1" Text="Notification" FontWeight="Bold" />
+                <TextBlock Grid.Column="2" Text="Time" FontWeight="Bold" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="3" Text="" />
+            </Grid>
+
+            <!-- Items -->
+            <ItemsControl Grid.Row="1" ItemsSource="{Binding PagedNotifications}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="dto:NotificationDTO">
+                        <Grid ColumnDefinitions="48,*,200,56" Padding="12" BorderBrush="#EEE" BorderThickness="0,0,0,1">
+                            <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <!-- Bell icon using Segoe MDL2 Assets glyph -->
+                                <FontIcon Glyph="&#xE7ED;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="DarkSlateBlue" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="12,0,12,0">
+                                <TextBlock Text="{x:Bind Title}" FontSize="16" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+
+                                <TextBlock Text="{x:Bind Body}" FontSize="14" TextWrapping="Wrap" Margin="0,6,0,0" MaxHeight="64" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind TimeDisplay}" FontSize="12" Foreground="Gray" HorizontalAlignment="Center" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Button Click="DeleteButton_Click" ToolTipService.ToolTip="Delete" Width="36" Height="36">
+                                    <SymbolIcon Symbol="Delete" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+
+        <!-- Footer with paging controls -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock VerticalAlignment="Center" Text="{Binding ShowingText}" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Prev" Click="PrevButton_Click" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding CurrentPage}" />
+                <TextBlock VerticalAlignment="Center" Text="/" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding PageCount}" />
+                <Button Content="Next" Click="NextButton_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
