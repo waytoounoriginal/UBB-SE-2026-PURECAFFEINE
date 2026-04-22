@@ -1,85 +1,37 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Property_and_Management.src.DTO;
+using Property_and_Management.Src.DataTransferObjects;
 
-namespace Property_and_Management.src.Interface
+namespace Property_and_Management.Src.Interface
 {
     public interface IRequestService
     {
-        /// <summary>
-        /// Returns ImmutableList<RequestDTO> of all requests made by a specific renter.
-        /// </summary>
-        /// <param name="renterId"></param>
-        /// <returns></returns>
-        ImmutableList<RequestDTO> GetRequestsForRenter(int renterId);
+        ImmutableList<RequestDTO> GetRequestsForRenter(int renterUserId);
 
-        /// <summary>
-        /// Returns owner's incoming rental requests as immutable list.
-        /// </summary>
-        /// <param name="ownerId"></param>
-        /// <returns></returns>
-        ImmutableList<RequestDTO> GetRequestsForOwner(int ownerId);
+        ImmutableList<RequestDTO> GetRequestsForOwner(int ownerUserId);
 
-        /// <summary>
-        /// Creates new request with game ID, renter/owner IDs, and date range; returns new request ID.
-        /// </summary>
-        /// <param name="gameId"></param>
-        /// <param name="renterId"></param>
-        /// <param name="ownerId"></param>
-        /// <param name="startDate"></param>
-        /// <param name="endDate"></param>
-        /// <returns></returns>
-        int CreateRequest(int gameId, int renterId, int ownerId, DateTime startDate, DateTime endDate);
+        Result<int, CreateRequestError> CreateRequest(
+            int gameId,
+            int renterUserId,
+            int ownerUserId,
+            DateTime startDate,
+            DateTime endDate);
 
-        /// <summary>
-        /// Owner approves specific request; returns status code.
-        /// </summary>
-        /// <param name="requestId"></param>
-        /// <param name="ownerId"></param>
-        /// <returns></returns>
-        int ApproveRequest(int requestId, int ownerId);
+        Result<int, ApproveRequestError> ApproveRequest(int requestId, int ownerUserId);
 
-        /// <summary>
-        /// Owner rejects with reason.
-        /// </summary>
-        /// <param name="requestId"></param>
-        /// <param name="ownerId"></param>
-        /// <param name="reason"></param>
-        /// <returns></returns>
-        int DenyRequest(int requestId, int ownerId, string reason);
+        Result<int, DenyRequestError> DenyRequest(int requestId, int ownerUserId, string declineReason);
 
-        /// <summary>
-        /// Any party cancels existing request (void).
-        /// </summary>
-        /// <param name="requestId"></param>
-        void CancelRequest(int requestId);
+        int CancelRequest(int requestId, int cancellingUserId);
 
-        /// <summary>
-        /// Handles cleanup when game/property is deactivated (void).
-        /// </summary>
-        /// <param name="gameId"></param>
         void OnGameDeactivated(int gameId);
 
-        /// <summary>
-        /// Returns bool if dates are free for game.
-        /// </summary>
-        /// <param name="gameId"></param>
-        /// <param name="startDate"></param>
-        /// <param name="endDate"></param>
-        /// <returns></returns>
         bool CheckAvailability(int gameId, DateTime startDate, DateTime endDate);
 
-        /// <summary>
-        /// Returns ImmutableList<(DateTime, DateTime)> of booked date ranges for calendar/month view.
-        /// </summary>
-        /// <param name="gameId"></param>
-        /// <param name="month"></param>
-        /// <param name="year"></param>
-        /// <returns></returns>
-        ImmutableList<(DateTime, DateTime)> GetBookedDates(int gameId, int month, int year);
+        ImmutableList<(DateTime StartDate, DateTime EndDate)> GetBookedDates(
+            int gameId,
+            int calendarMonth,
+            int calendarYear);
+
+        Result<int, OfferError> OfferGame(int requestId, int offeringOwnerUserId);
     }
 }

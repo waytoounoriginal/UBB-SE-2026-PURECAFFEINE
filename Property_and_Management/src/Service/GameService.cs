@@ -1,53 +1,82 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
-using Property_and_Management.src.Repository;
+using Property_and_Management.Src.DataTransferObjects;
+using Property_and_Management.Src.Interface;
+using Property_and_Management.Src.Model;
 
-namespace Property_and_Management.src.Service
+namespace Property_and_Management.Src.Service
 {
     public class GameService : IGameService
     {
-        private IGameRepository _gameRepository;
-        private readonly IMapper<Game, GameDTO> _gameMapper;
+        private readonly IGameRepository gameListingRepository;
+        private readonly IRentalRepository gameRentalRepository;
+        private readonly IMapper<Game, GameDTO> gameDtoMapper;
+        private readonly IRequestService rentalRequestService;
+        private const int NoActiveOrUpcomingRentals = 0;
+        private const int SingularRentalCount = 1;
 
-        public GameService(IGameRepository gameRepository, IMapper<Game, GameDTO> gameMapper)
+        public GameService(
+            IGameRepository gameRepository,
+            IRentalRepository rentalRepository,
+            IMapper<Game, GameDTO> gameMapper,
+            IRequestService requestService)
         {
-            _gameRepository = gameRepository;
-            _gameMapper = gameMapper;
+            this.gameListingRepository = gameRepository;
+            this.gameRentalRepository = rentalRepository;
+            this.gameDtoMapper = gameMapper;
+            this.rentalRequestService = requestService;
         }
 
-        public void SetGameRepository(IGameRepository gameRepository) =>
-            _gameRepository = gameRepository;
-
-        public void AddGame(GameDTO game)
+        public void AddGame(GameDTO gameToAdd)
         {
-            _gameRepository.Add(_gameMapper.ToModel(game));
+            gameListingRepository.Add(gameDtoMapper.ToModel(gameToAdd));
         }
 
-        public void UpdateGameById(int id, GameDTO game)
+        public void UpdateGameByIdentifier(int gameId, GameDTO updatedGameData)
         {
-            _gameRepository.Update(id, _gameMapper.ToModel(game));
+            gameListingRepository.Update(gameId, gameDtoMapper.ToModel(updatedGameData));
         }
 
-        public GameDTO DeleteGameById(int id)
+        public GameDTO DeleteGameByIdentifier(int gameId)
         {
-            return _gameMapper.ToDTO(_gameRepository.Delete(id));
+            var gameRentals = gameRentalRepository.GetRentalsByGame(gameId);
+            var currentTime = DateTime.Now;
+            var activeOrUpcomingRentalsCount = gameRentals.Count(rental => rental.EndDate >= currentTime);
+            if (activeOrUpcomingRentalsCount > NoActiveOrUpcomingRentals)
+            {
+                var rentalWord = activeOrUpcomingRentalsCount == SingularRentalCount ? "rental" : "rentals";
+                throw new InvalidOperationException(
+                    $"There are {activeOrUpcomingRentalsCount} active {rentalWord} for this game and it cannot be removed now.");
+            }
+
+            foreach (var pastRental in gameRentals)
+            {
+                gameRentalRepository.Delete(pastRental.Id);
+            }
+
+            rentalRequestService.OnGameDeactivated(gameId);
+            return gameDtoMapper.ToDTO(gameListingRepository.Delete(gameId));
         }
 
-        public GameDTO GetGameById(int id)
+        public GameDTO GetGameByIdentifier(int gameId)
         {
-            return _gameMapper.ToDTO(_gameRepository.Get(id));
+            return gameDtoMapper.ToDTO(gameListingRepository.Get(gameId));
         }
 
-        public ImmutableList<GameDTO> GetGamesForOwner(int ownerId)
+        public ImmutableList<GameDTO> GetGamesForOwner(int ownerUserId)
         {
-            return _gameRepository
-                .GetGamesByOwner(ownerId)
-                .Select(game => _gameMapper.ToDTO(game))
+            return gameListingRepository
+                .GetGamesByOwner(ownerUserId)
+                .Select(game => gameDtoMapper.ToDTO(game))
+                .ToImmutableList();
+        }
+
+        public ImmutableList<GameDTO> GetAllGames()
+        {
+            return gameListingRepository
+                .GetAll()
+                .Select(game => gameDtoMapper.ToDTO(game))
                 .ToImmutableList();
         }
     }

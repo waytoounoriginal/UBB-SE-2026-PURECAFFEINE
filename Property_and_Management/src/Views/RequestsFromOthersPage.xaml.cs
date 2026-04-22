@@ -1,29 +1,30 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Viewmodels;
+using Property_and_Management.Src.DataTransferObjects;
+using Property_and_Management.Src.Viewmodels;
 
-namespace Property_and_Management.src.Views
+namespace Property_and_Management.Src.Views
 {
     public sealed partial class RequestsFromOthersPage : Page
     {
+        private const double DenyReasonInputMinimumWidth = 360;
+        private const double DenyDialogContentSpacing = 8;
+
         public RequestsFromOthersPage()
         {
             InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs navigationEventArgs)
         {
-            base.OnNavigatedTo(e);
+            base.OnNavigatedTo(navigationEventArgs);
 
-            if (e.Parameter is RequestsFromOthersViewModel vm)
+            if (navigationEventArgs.Parameter is RequestsFromOthersViewModel requestsFromOthersViewModel)
             {
-                DataContext = vm;
+                DataContext = requestsFromOthersViewModel;
                 return;
             }
 
@@ -33,88 +34,108 @@ namespace Property_and_Management.src.Views
             }
         }
 
-        private void RequestItem_Tapped(object sender, DoubleTappedRoutedEventArgs e)
+        private void OfferButton_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            if (sender is FrameworkElement element && element.DataContext is RequestDTO request && request.Id > 0)
-            {
-                Frame?.Navigate(typeof(ChatView), request.Id);
-            }
+            tappedRoutedEventArgs.Handled = true;
         }
 
-        private void RequestItem_Tapped(object sender, TappedRoutedEventArgs e)
+        private void DenyButton_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            if (sender is FrameworkElement element && element.DataContext is RequestDTO request && request.Id > 0)
-            {
-                Frame?.Navigate(typeof(ChatView), request.Id);
-            }
+            tappedRoutedEventArgs.Handled = true;
         }
 
-        private void DenyButton_Tapped(object sender, TappedRoutedEventArgs e)
+        private async void OfferButton_Click(object sender, RoutedEventArgs routedEventArgs)
         {
-            e.Handled = true;
-        }
-        private async void DenyButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is not Button btn || btn.Tag is not int requestId)
+            if (sender is not Button clickedButton || clickedButton.Tag is not int requestId)
+            {
                 return;
+            }
 
-            ContentDialog deleteDialog = new ContentDialog
+            var tappedRequestDto = clickedButton.DataContext as RequestDTO;
+            var requestedGameName = tappedRequestDto?.Game?.Name ?? "this game";
+            var requesterDisplayName = tappedRequestDto?.Renter?.DisplayName ?? "the requester";
+
+            var offerConfirmationResult = await DialogHelper.ShowConfirmationAsync(
+                this.XamlRoot,
+                Constants.DialogTitles.OfferGameConfirmation,
+                $"Offer {requestedGameName} to {requesterDisplayName} for {tappedRequestDto?.StartDateDisplayLong} - {tappedRequestDto?.EndDateDisplayLong}? This will approve the request and create the rental immediately.",
+                Constants.DialogButtons.Offer,
+                Constants.DialogButtons.Cancel,
+                ContentDialogButton.Primary);
+
+            if (offerConfirmationResult != ContentDialogResult.Primary)
             {
-                Title = "Delete Request?",
-                Content = $"Are you sure you want to permanently delete this request and all associated active requests? Existing rentals will not be deleted.",
-                PrimaryButtonText = "Delete",
-                CloseButtonText = "Cancel",
-                DefaultButton = ContentDialogButton.Close,
-                XamlRoot = this.XamlRoot
+                return;
+            }
+
+            var pageViewModel = DataContext as RequestsFromOthersViewModel;
+            var offerErrorMessage = pageViewModel?.TryOfferGame(requestId);
+            if (offerErrorMessage != null)
+            {
+                await DialogHelper.ShowMessageAsync(this.XamlRoot, Constants.DialogTitles.OfferFailed, offerErrorMessage);
+            }
+        }
+
+        private async void DenyButton_Click(object sender, RoutedEventArgs routedEventArgs)
+        {
+            if (sender is not Button clickedButton || clickedButton.Tag is not int requestId)
+            {
+                return;
+            }
+
+            var tappedRequestDto = clickedButton.DataContext as RequestDTO;
+            var requestedGameName = tappedRequestDto?.Game?.Name ?? "this game";
+            var requesterDisplayName = tappedRequestDto?.Renter?.DisplayName ?? "the requester";
+
+            var denyReasonTextBox = new TextBox
+            {
+                PlaceholderText = "Optional reason (e.g. unavailable in this period)",
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.Wrap,
+                MinWidth = DenyReasonInputMinimumWidth
             };
 
-            var result = await deleteDialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
+            var denyDialogContentPanel = new StackPanel { Spacing = DenyDialogContentSpacing };
+            denyDialogContentPanel.Children.Add(new TextBlock
             {
-                var vm = DataContext as RequestsFromOthersViewModel;
-                vm?.DenyRequest(requestId, "The owner declined your request");
+                Text = $"Decline request for {requestedGameName} from {requesterDisplayName}?"
+            });
+            denyDialogContentPanel.Children.Add(denyReasonTextBox);
+
+            var denyConfirmationResult = await DialogHelper.ShowConfirmationAsync(
+                this.XamlRoot,
+                Constants.DialogTitles.DeclineRequestConfirmation,
+                denyDialogContentPanel,
+                Constants.DialogButtons.Decline,
+                Constants.DialogButtons.Cancel,
+                ContentDialogButton.Primary);
+
+            if (denyConfirmationResult != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            var pageViewModel = DataContext as RequestsFromOthersViewModel;
+            var denyErrorMessage = pageViewModel?.TryDenyRequest(requestId, denyReasonTextBox.Text);
+            if (denyErrorMessage != null)
+            {
+                await DialogHelper.ShowMessageAsync(this.XamlRoot, Constants.DialogTitles.DeclineFailed, denyErrorMessage);
             }
         }
-        private void Image_ImageFailed(object sender, ExceptionRoutedEventArgs e)
+
+        private void Image_ImageFailed(object sender, ExceptionRoutedEventArgs exceptionRoutedEventArgs)
         {
-            if (sender is not Image img)
-            {
-                return;
-            }
-
-            if (img.Source is BitmapImage current &&
-                current.UriSource != null &&
-                current.UriSource.AbsoluteUri.EndsWith("/Assets/default-game-placeholder.jpg", StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            if (Resources.TryGetValue("DefaultGameImage", out var localResource) && localResource is BitmapImage localImage)
-            {
-                img.Source = localImage;
-                return;
-            }
-
-            if (Application.Current.Resources.TryGetValue("DefaultGameImage", out var appResource) && appResource is BitmapImage appImage)
-            {
-                img.Source = appImage;
-                return;
-            }
-
-            img.Source = new BitmapImage(new Uri("ms-appx:///Assets/default-game-placeholder.jpg"));
+            ImageFailureHandler.HandleFailure(sender as Image, Resources);
         }
 
-        private void NextButton_Click(object sender, RoutedEventArgs e)
+        private void NextButton_Click(object sender, RoutedEventArgs routedEventArgs)
         {
-            var vm = DataContext as RequestsFromOthersViewModel;
-            vm?.NextPage();
+            (DataContext as RequestsFromOthersViewModel)?.NextPage();
         }
 
-        private void PrevButton_Click(object sender, RoutedEventArgs e)
+        private void PrevButton_Click(object sender, RoutedEventArgs routedEventArgs)
         {
-            var vm = DataContext as RequestsFromOthersViewModel;
-            vm?.PrevPage();
+            (DataContext as RequestsFromOthersViewModel)?.PrevPage();
         }
     }
 }

@@ -1,24 +1,19 @@
-﻿namespace NotificationServer
+namespace NotificationServer
 {
-
     internal class Program
     {
-
-        static async Task Main(string[] args)
+        private static async Task Main()
         {
-            using var cts = new CancellationTokenSource();
+            using var udpListenerLifetimeCancellationSource = new CancellationTokenSource();
 
-            // Handle Ctrl+C
-            Console.CancelKeyPress += (sender, e) =>
+            Console.CancelKeyPress += (_, cancelKeyPressEventArgs) =>
             {
-                e.Cancel = true;
+                cancelKeyPressEventArgs.Cancel = true;
                 Console.WriteLine("Stopping server...");
-                cts.Cancel();
+                udpListenerLifetimeCancellationSource.Cancel();
             };
 
-            await UdpNotificationServer.ListenAsync(cts.Token);
+            await UdpNotificationServer.ListenAsync(udpListenerLifetimeCancellationSource.Token);
         }
-
     }
-
 }

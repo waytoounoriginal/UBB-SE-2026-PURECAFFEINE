@@ -1,128 +1,103 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using Property_and_Management.src.Viewmodels;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using Property_and_Management.Src.Viewmodels;
 
-
-namespace Property_and_Management.src.Views
+namespace Property_and_Management.Src.Views
 {
     public sealed partial class EditGameView : Page
     {
+        private const int EmptyImageLength = 0;
+
         public EditGameViewModel ViewModel { get; }
 
         public EditGameView()
         {
             this.InitializeComponent();
+
             ViewModel = App.Services.GetRequiredService<EditGameViewModel>();
         }
 
-        // Catches the Game ID passed from the Listings Page
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs navigationEventArgs)
         {
-            base.OnNavigatedTo(e);
+            base.OnNavigatedTo(navigationEventArgs);
 
-            // If the navigation parameter is an integer, load that game's data 
-            if (e.Parameter is int incomingGameId)
+            if (navigationEventArgs.Parameter is int incomingGameId)
             {
                 ViewModel.LoadGame(incomingGameId);
                 this.Bindings.Update();
             }
 
-            if (ViewModel.Image != null && ViewModel.Image.Length > 0)
+            if (ViewModel.GameImage != null && ViewModel.GameImage.Length > EmptyImageLength)
             {
-                using (var memoryStream = new System.IO.MemoryStream(ViewModel.Image))
+                using (var existingImageMemoryStream = new System.IO.MemoryStream(ViewModel.GameImage))
                 {
-                    // Convert the database bytes into a stream the Image control can read
-                    var randomAccessStream = memoryStream.AsRandomAccessStream();
-                    var bitmapImage = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
-                    await bitmapImage.SetSourceAsync(randomAccessStream);
-
-                    // Put the picture into the little preview box!
-                    ImagePreview.Source = bitmapImage;
+                    var existingImageStream = existingImageMemoryStream.AsRandomAccessStream();
+                    var existingGameImageBitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                    await existingGameImageBitmap.SetSourceAsync(existingImageStream);
+                    ImagePreview.Source = existingGameImageBitmap;
                 }
             }
         }
 
-        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveButton_Click(object sender, RoutedEventArgs routedEventArgs)
         {
-            // Validate modified inputs [cite: 132]
-            if (ViewModel.ValidateInputs())
-            {
-                ViewModel.UpdateGame();
+            ViewModel.SetGamePriceFromText(PriceNumberBox.Text);
 
-                // On successful validation, redirect back to Listings page [cite: 134]
+            var gameUpdateResult = ViewModel.SubmitGameUpdate();
+            if (gameUpdateResult.IsSuccess)
+            {
                 if (Frame.CanGoBack)
                 {
                     Frame.GoBack();
                 }
+                return;
             }
-            else
-            {
-                // If validation fails, display inline error [cite: 133]
-                var dialog = new ContentDialog
-                {
-                    Title = "Validation Error",
-                    Content = "Please ensure all fields are filled out correctly according to the rules.",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await dialog.ShowAsync();
-            }
+
+            await DialogHelper.ShowMessageAsync(
+                this.XamlRoot,
+                gameUpdateResult.DialogTitle,
+                gameUpdateResult.DialogMessage);
         }
 
-        private async void UploadImageButton_Click(object sender, RoutedEventArgs e)
+        private async void UploadImageButton_Click(object sender, RoutedEventArgs routedEventArgs)
         {
-            // 1. Set up the Windows File Picker
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
-            picker.FileTypeFilter.Add(".jpg");
-            picker.FileTypeFilter.Add(".jpeg");
-            picker.FileTypeFilter.Add(".png");
+            var imageFilePicker = new Windows.Storage.Pickers.FileOpenPicker();
+            imageFilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+            imageFilePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            imageFilePicker.FileTypeFilter.Add(".jpg");
+            imageFilePicker.FileTypeFilter.Add(".jpeg");
+            imageFilePicker.FileTypeFilter.Add(".png");
 
-            // WinUI 3 Quirk: We have to explicitly tell the picker which window it belongs to
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
-            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            var mainWindowHandle = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+            WinRT.Interop.InitializeWithWindow.Initialize(imageFilePicker, mainWindowHandle);
 
-            // 2. Open the picker and wait for the user to select a file
-            Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
-
-            if (file != null)
+            var selectedImageFile = await imageFilePicker.PickSingleFileAsync();
+            if (selectedImageFile == null)
             {
-                FileNameTextBlock.Text = file.Name;
-
-                // 3. Convert the image file into a byte array for the Database
-                using (var stream = await file.OpenStreamForReadAsync())
-                {
-                    using (var memoryStream = new System.IO.MemoryStream())
-                    {
-                        await stream.CopyToAsync(memoryStream);
-
-                        // Save the bytes to your ViewModel!
-                        ViewModel.Image = memoryStream.ToArray();
-                    }
-                }
-
-                // 4. Update the little UI preview box so the user sees what they picked
-                var bitmapImage = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
-                using (var irandomAccessStream = await file.OpenAsync(Windows.Storage.FileAccessMode.Read))
-                {
-                    await bitmapImage.SetSourceAsync(irandomAccessStream);
-                }
-                ImagePreview.Source = bitmapImage;
+                return;
             }
+
+            FileNameTextBlock.Text = selectedImageFile.Name;
+
+            using (var fileReadStream = await selectedImageFile.OpenStreamForReadAsync())
+            {
+                using (var imageMemoryStream = new System.IO.MemoryStream())
+                {
+                    await fileReadStream.CopyToAsync(imageMemoryStream);
+                    ViewModel.GameImage = imageMemoryStream.ToArray();
+                }
+            }
+
+            var previewBitmapImage = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+            using (var imageRandomAccessStream = await selectedImageFile.OpenAsync(Windows.Storage.FileAccessMode.Read))
+            {
+                await previewBitmapImage.SetSourceAsync(imageRandomAccessStream);
+            }
+            ImagePreview.Source = previewBitmapImage;
         }
     }
 }

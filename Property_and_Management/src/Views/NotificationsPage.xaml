@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Page x:Class="Property_and_Management.src.Views.NotificationsPage"
+<Page x:Class="Property_and_Management.Src.Views.NotificationsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:local="using:Property_and_Management.src.Views"
+      xmlns:local="using:Property_and_Management.Src.Views"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:dto="using:Property_and_Management.src.DTO"
+      xmlns:notificationDtoNamespace="using:Property_and_Management.Src.DataTransferObjects"
       mc:Ignorable="d">
 
     <Page.Resources>
@@ -30,11 +30,11 @@
         <TextBlock Grid.Row="0" Text="My Notifications" Style="{StaticResource SubtitleTextBlockStyle}" Margin="12"/>
 
         <ListView x:Name="ItemsListView" Grid.Row="1"
-                  ItemsSource="{Binding PagedNotifications}"
+                  ItemsSource="{Binding PagedItems}"
                   SelectionMode="None"
                   IsItemClickEnabled="False">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="dto:NotificationDTO">
+                <DataTemplate x:DataType="notificationDtoNamespace:NotificationDTO">
                     <Grid Background="#2D2D2D" Margin="0,0,0,10" Padding="15" CornerRadius="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="80"/>
@@ -48,21 +48,19 @@
 
                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{x:Bind Title}" Style="{StaticResource BaseTextBlockStyle}" FontWeight="SemiBold"/>
-                            <TextBlock Text="{x:Bind Body}" Style="{StaticResource BodyTextBlockStyle}" Opacity="0.8" Margin="0,2,0,0" TextWrapping="Wrap" MaxHeight="40" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{x:Bind Body}" Style="{StaticResource BodyTextBlockStyle}" Opacity="0.8" Margin="0,2,0,0" TextWrapping="Wrap"/>
                             <TextBlock Text="{x:Bind TimeDisplay}" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,4,0,0" Opacity="0.6"/>
                         </StackPanel>
-
-                        <Button Grid.Column="2" 
-                                Click="DeleteButton_Click" 
-                                ToolTipService.ToolTip="Delete" 
-                                Margin="12,0,0,0" 
-                                Width="40" Height="40" 
-                                Background="#C50F1F" 
-                                Foreground="White" 
-                                BorderThickness="0" 
-                                VerticalAlignment="Center">
-                            <SymbolIcon Symbol="Delete" />
-                        </Button>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Click="DeleteButton_Click"
+                                    ToolTipService.ToolTip="Delete"
+                                    Width="40" Height="40"
+                                    Background="#C50F1F"
+                                    Foreground="White"
+                                    BorderThickness="0">
+                                <SymbolIcon Symbol="Delete" />
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

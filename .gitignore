@@ -5,15 +5,30 @@
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
+**/TestResults/
+**/.dotnet/
+.dotnet_home/
 *.user
 *.userosscache
 *.sln.docstates
 *.suo
 
 # ==========================================
+# Build / run logs (never commit)
+# ==========================================
+**/build.log
+**/*.stdout.log
+**/*.stderr.log
+
+# ==========================================
 # Demo builds
 # ==========================================
 demo-builds/
+
+# ==========================================
+# Environment config (per-developer)
+# ==========================================
+.env
 
 # ==========================================
 # WinUI 3 / Windows App SDK Specific
@@ -64,3 +79,12 @@ _ReSharper*/
 Thumbs.db
 ehthumbs.db
 $RECYCLE.BIN/
+
+# ==========================================
+# Local AI / Tooling Workspace Folders
+# ==========================================
+.claude/
+.superpowers/
+.superpowers.dotnet/
+.dotnet/
+.vs/

@@ -1,48 +1,53 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
+using Property_and_Management.Src.DataTransferObjects;
+using Property_and_Management.Src.Interface;
+using Property_and_Management.Src.Model;
 
-namespace Property_and_Management.src.Mapper
+namespace Property_and_Management.Src.Mapper
 {
     public class NotificationMapper : IMapper<Notification, NotificationDTO>
     {
-        private readonly IMapper<User, UserDTO> _userMapper;
+        private readonly IMapper<User, UserDTO> notificationRecipientUserMapper;
 
-        public NotificationMapper(IMapper<User, UserDTO> userMapper)
+        public NotificationMapper(IMapper<User, UserDTO> notificationRecipientUserMapper)
         {
-            _userMapper = userMapper;
+            this.notificationRecipientUserMapper = notificationRecipientUserMapper;
         }
 
-        public NotificationDTO ToDTO(Notification entity)
+        public NotificationDTO ToDTO(Notification notificationModel)
         {
-            if (entity == null) return null;
+            if (notificationModel == null)
+            {
+                return null;
+            }
 
             return new NotificationDTO
             {
-                Id = entity.Id,
-                User = _userMapper.ToDTO(entity.User),
-                Timestamp = entity.Timestamp,
-                Title = entity.Title,
-                Body = entity.Body
+                Id = notificationModel.Id,
+                User = notificationRecipientUserMapper.ToDTO(notificationModel.User),
+                Timestamp = notificationModel.Timestamp,
+                Title = notificationModel.Title,
+                Body = notificationModel.Body,
+                Type = notificationModel.Type,
+                RelatedRequestId = notificationModel.RelatedRequestId
             };
         }
 
-        public Notification ToModel(NotificationDTO dto)
+        public Notification ToModel(NotificationDTO notificationDto)
         {
-            if (dto == null) return null;
+            if (notificationDto == null)
+            {
+                return null;
+            }
 
             return new Notification
             {
-                Id = dto.Id,
-                User = _userMapper.ToModel(dto.User),
-                Timestamp = dto.Timestamp,
-                Title = dto.Title,
-                Body = dto.Body
+                Id = notificationDto.Id,
+                User = notificationRecipientUserMapper.ToModel(notificationDto.User),
+                Timestamp = notificationDto.Timestamp,
+                Title = notificationDto.Title,
+                Body = notificationDto.Body,
+                Type = notificationDto.Type,
+                RelatedRequestId = notificationDto.RelatedRequestId
             };
         }
     }

@@ -4,17 +4,26 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Viewmodels;
+using Property_and_Management.Src.Interface;
+using Property_and_Management.Src.Viewmodels;
 
-namespace Property_and_Management.src.Views
+namespace Property_and_Management.Src.Views
 {
     public sealed partial class MenuBarView : Page
     {
         public MenuBarViewModel ViewModel { get; }
 
-        // The Menu stores a private copy of the service to pass out later
-        private IGameService _passedGameService;
+        private static readonly Dictionary<AppPage, Type> PageTypeMap = new()
+        {
+            { AppPage.Listings,            typeof(ListingsPage) },
+            { AppPage.RequestsFromOthers,  typeof(RequestsFromOthersPage) },
+            { AppPage.RentalsFromOthers,   typeof(RentalsFromOthersPage) },
+            { AppPage.RequestsToOthers,    typeof(RequestsToOthersPage) },
+            { AppPage.RentalsToOthers,     typeof(RentalsToOthersPage) },
+            { AppPage.Notifications,       typeof(NotificationsPage) }
+        };
+
+        private IGameService injectedGameService;
 
         public MenuBarView()
         {
@@ -22,31 +31,38 @@ namespace Property_and_Management.src.Views
             ViewModel = App.Services.GetRequiredService<MenuBarViewModel>();
             this.DataContext = ViewModel;
             ViewModel.RequestNavigation += OnViewModelRequestedNavigation;
-
-
+            this.Unloaded += OnMenuBarViewUnloaded;
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs navigationEventArgs)
         {
-            base.OnNavigatedTo(e);
+            base.OnNavigatedTo(navigationEventArgs);
 
-            if (e.Parameter is IGameService gameService)
+            if (navigationEventArgs.Parameter is IGameService gameService)
             {
-                _passedGameService = gameService;
+                injectedGameService = gameService;
             }
         }
 
-        // When the user clicks "Listings", pass the service to the new page!
-        private void OnViewModelRequestedNavigation(System.Type pageType)
+        private void OnViewModelRequestedNavigation(AppPage page)
         {
-            // Pass the service right through the ContentFrame!
-            ContentFrame.Navigate(pageType, _passedGameService);
+            if (!PageTypeMap.TryGetValue(page, out var pageType))
+            {
+                return;
+            }
+
+            ContentFrame.Navigate(pageType, injectedGameService);
+        }
+
+        private void OnMenuBarViewUnloaded(object pageSender, RoutedEventArgs unloadedEventArgs)
+        {
+            ViewModel.RequestNavigation -= OnViewModelRequestedNavigation;
         }
 
         public void NavigateToNotifications()
         {
-            var app = Application.Current as Property_and_Management.App;
-            ContentFrame.Navigate(typeof(NotificationsPage), app?.NotificationsViewModel);
+            var resolvedNotificationsViewModel = App.Services.GetRequiredService<NotificationsViewModel>();
+            ContentFrame.Navigate(typeof(NotificationsPage), resolvedNotificationsViewModel);
             ViewModel.SelectedPageName = "Notifications";
         }
     }

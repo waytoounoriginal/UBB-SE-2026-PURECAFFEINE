@@ -1,37 +1,20 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Property_and_Management.src.DTO;
+using Property_and_Management.Src.DataTransferObjects;
 
-namespace Property_and_Management.src.Interface
+namespace Property_and_Management.Src.Interface
 {
     public interface IGameService
     {
-        /// <summary>Add a new game.</summary>
-        /// <param name="game">The added game data.</param>
-        void AddGame(GameDTO game);
+        void AddGame(GameDTO gameDto);
 
-        /// <summary>Update an existing game identified by id.</summary>
-        /// <param name="id">The identifier of the game.</param>
-        /// <param name="game">The updated game data.</param>
-        public void UpdateGameById(int id, GameDTO game);
+        public void UpdateGameByIdentifier(int gameId, GameDTO updatedGameDTO);
 
-        /// <summary>Delete a game by its identifier and return the deleted item.</summary>
-        /// <param name="id">The identifier of the game.</param>
-        /// <returns>The deleted <see cref="GameDTO"/>.</returns>
-        public GameDTO DeleteGameById(int id);
+        public GameDTO DeleteGameByIdentifier(int gameId);
 
-        /// <summary>Get a game by its identifier and returns it.</summary>
-        /// <param name="id">The identifier of the game.</param>
-        /// <returns>The <see cref="GameDTO"/>.</returns>
-        public GameDTO GetGameById(int id);
+        public GameDTO GetGameByIdentifier(int gameId);
 
-        /// <summary>Return all games of a given owner.</summary>
-        /// <param name="ownerId">The identifier of the owner.</param>
-        /// <returns>A list of <see cref="GameDTO"/> objects for the specified owner.</returns>
-        public ImmutableList<GameDTO> GetGamesForOwner(int ownerId);
+        public ImmutableList<GameDTO> GetGamesForOwner(int ownerUserId);
+
+        ImmutableList<GameDTO> GetAllGames();
     }
 }

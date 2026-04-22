@@ -1,26 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Property_and_Management.src.Interface
+﻿namespace Property_and_Management.Src.Interface
 {
-    public interface IMapper<TEntity, TDto>
-        where TEntity : IEntity
-        where TDto : IDTO<TEntity>
+    public interface IMapper<TDomainModel, TDTO>
+        where TDomainModel : IEntity
+        where TDTO : IDTO<TDomainModel>
     {
-        /// <summary>
-        /// Method for creating a DTO from a model
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns>The newly created DTO</returns>
-        TDto ToDTO(TEntity entity);
+        TDTO ToDTO(TDomainModel sourceModel);
 
-        /// <summary>
-        /// Converts the current instance to a model of type <typeparamref name="T"/>.
-        /// </summary>
-        /// <returns>An object of type <typeparamref name="T"/> representing the model equivalent of the current instance.</returns>
-        TEntity ToModel(TDto dto);
+        TDomainModel ToModel(TDTO sourceDataTransferObject);
     }
 }

@@ -1,29 +1,16 @@
-using System.Collections.Immutable;
-using Property_and_Management.src.Model;
+﻿using System.Collections.Immutable;
+using Property_and_Management.Src.Model;
 
-namespace Property_and_Management.src.Interface
+namespace Property_and_Management.Src.Interface
 {
     public interface IRentalRepository : IRepository<Rental>
     {
-        /// <summary>
-        /// Gets rentals for which the specified user is the owner.
-        /// </summary>
-        /// <param name="ownerId">Owner user id.</param>
-        /// <returns>Immutable list of matching rentals.</returns>
-        ImmutableList<Rental> GetRentalsByOwner(int ownerId);
+        void AddConfirmed(Rental confirmedRental);
 
-        /// <summary>
-        /// Gets rentals created by the specified renter.
-        /// </summary>
-        /// <param name="renterId">Renter user id.</param>
-        /// <returns>Immutable list of matching rentals.</returns>
-        ImmutableList<Rental> GetRentalsByRenter(int renterId);
+        ImmutableList<Rental> GetRentalsByOwner(int ownerUserId);
 
-        /// <summary>
-        /// Gets rentals for the specified game.
-        /// </summary>
-        /// <param name="gameId">Game id.</param>
-        /// <returns>Immutable list of matching rentals.</returns>
+        ImmutableList<Rental> GetRentalsByRenter(int renterUserId);
+
         ImmutableList<Rental> GetRentalsByGame(int gameId);
     }
 }

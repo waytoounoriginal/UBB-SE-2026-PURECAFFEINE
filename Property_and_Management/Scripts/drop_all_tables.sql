@@ -1,7 +1,5 @@
 USE BoardRent;
 GO
-
--- Drop tables in reverse order of creation to avoid foreign key constraint violations
 IF OBJECT_ID(N'[dbo].[Notifications]', 'U') IS NOT NULL 
     DROP TABLE [dbo].[Notifications];
 

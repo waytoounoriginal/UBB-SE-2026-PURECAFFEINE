@@ -1,20 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
-using ServerCommunication;
+using Property_and_Management.Src.DataTransferObjects;
 
-namespace Property_and_Management.src.Interface
+namespace Property_and_Management.Src.Interface
 {
-    public interface IServerClient : IObservable<MessageBase>
+    public interface IServerClient : IObservable<IncomingNotification>
     {
-        IPEndPoint ServerEndpoint { get; }
-
         Task ListenAsync();
-        void SubscribeToServer(int userId);
-        void SendNotification(int userId, string title, string body);
+        void SubscribeToServer(int targetUserId);
+        void SendNotification(int targetUserId, string notificationTitle, string notificationBody);
         void StopListening();
     }
 }

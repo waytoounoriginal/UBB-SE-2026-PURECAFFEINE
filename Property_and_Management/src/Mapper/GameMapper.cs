@@ -1,51 +1,57 @@
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
+using Property_and_Management.Src.DataTransferObjects;
+using Property_and_Management.Src.Interface;
+using Property_and_Management.Src.Model;
 
-namespace Property_and_Management.src.Mapper
+namespace Property_and_Management.Src.Mapper
 {
     public class GameMapper : IMapper<Game, GameDTO>
     {
-        private readonly IMapper<User, UserDTO> _userMapper;
+        private readonly IMapper<User, UserDTO> gameOwnerUserMapper;
 
-        public GameMapper(IMapper<User, UserDTO> userMapper)
+        public GameMapper(IMapper<User, UserDTO> gameOwnerMapper)
         {
-            _userMapper = userMapper;
+            this.gameOwnerUserMapper = gameOwnerMapper;
         }
 
-        public GameDTO ToDTO(Game entity)
+        public GameDTO ToDTO(Game gameModel)
         {
-            if (entity == null) return null;
+            if (gameModel == null)
+            {
+                return null;
+            }
 
             return new GameDTO
             {
-                Id = entity.Id,
-                Owner = _userMapper.ToDTO(entity.Owner),
-                Name = entity.Name,
-                Price = entity.Price,
-                MinimumPlayerNumber = entity.MinimumPlayerNumber,
-                MaximumPlayerNumber = entity.MaximumPlayerNumber,
-                Description = entity.Description,
-                Image = entity.Image,
-                IsActive = entity.IsActive
+                Id = gameModel.Id,
+                Owner = gameOwnerUserMapper.ToDTO(gameModel.Owner),
+                Name = gameModel.Name,
+                Price = gameModel.Price,
+                MinimumPlayerNumber = gameModel.MinimumPlayerNumber,
+                MaximumPlayerNumber = gameModel.MaximumPlayerNumber,
+                Description = gameModel.Description,
+                Image = gameModel.Image,
+                IsActive = gameModel.IsActive
             };
         }
 
-        public Game ToModel(GameDTO dto)
+        public Game ToModel(GameDTO gameDto)
         {
-            if (dto == null) return null;
+            if (gameDto == null)
+            {
+                return null;
+            }
 
             return new Game
             {
-                Id = dto.Id,
-                Owner = _userMapper.ToModel(dto.Owner),
-                Name = dto.Name,
-                Price = dto.Price,
-                MinimumPlayerNumber = dto.MinimumPlayerNumber,
-                MaximumPlayerNumber = dto.MaximumPlayerNumber,
-                Description = dto.Description,
-                Image = dto.Image,
-                IsActive = dto.IsActive
+                Id = gameDto.Id,
+                Owner = gameOwnerUserMapper.ToModel(gameDto.Owner),
+                Name = gameDto.Name,
+                Price = gameDto.Price,
+                MinimumPlayerNumber = gameDto.MinimumPlayerNumber,
+                MaximumPlayerNumber = gameDto.MaximumPlayerNumber,
+                Description = gameDto.Description,
+                Image = gameDto.Image,
+                IsActive = gameDto.IsActive
             };
         }
     }

@@ -1,7 +1,7 @@
 using System;
-using Property_and_Management.src.Interface;
+using Property_and_Management.Src.Interface;
 
-namespace Property_and_Management.src.Model
+namespace Property_and_Management.Src.Model
 {
     public class Rental : IEntity
     {
@@ -12,14 +12,16 @@ namespace Property_and_Management.src.Model
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public Rental() { }
-
-        public Rental(int id, Game game, User renter, User owner, DateTime startDate, DateTime endDate)
+        public Rental()
         {
-            Id = id;
-            Game = game;
-            Renter = renter;
-            Owner = owner;
+        }
+
+        public Rental(int id, Game rentedGame, User renterUser, User ownerUser, DateTime startDate, DateTime endDate)
+        {
+            this.Id = id;
+            Game = rentedGame;
+            Renter = renterUser;
+            Owner = ownerUser;
             StartDate = startDate;
             EndDate = endDate;
         }

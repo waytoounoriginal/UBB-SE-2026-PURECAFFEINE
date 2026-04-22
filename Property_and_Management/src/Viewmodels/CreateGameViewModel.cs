@@ -1,89 +1,105 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
+using Property_and_Management.Src.DataTransferObjects;
+using Property_and_Management.Src.Interface;
 
-namespace Property_and_Management.src.Viewmodels
+namespace Property_and_Management.Src.Viewmodels
 {
     public class CreateGameViewModel
     {
-        private readonly IGameService _gameService;
+        private const int NoValidationErrors = 0;
+        private const int NewGameId = 0;
+        private const decimal ZeroPriceForEmptyOrInvalidInput = 0m;
 
-        // UI Binding Properties
-        public string Name { get; set; } = string.Empty;
-        public decimal Price { get; set; }
-        public double PriceDouble
+        private readonly IGameService gameListingService;
+        private readonly ICurrentUserContext currentUserContext;
+
+        public string GameName { get; set; } = string.Empty;
+        public decimal GamePrice { get; set; }
+        public double GamePriceAsDouble
         {
-            get => (double)Price;
-            set => Price = (decimal)value;
+            get => (double)GamePrice;
+            set => GamePrice = (decimal)value;
         }
-        public int MinPlayers { get; set; } = 1;
-        public int MaxPlayers { get; set; } = 4;
-        public string Description { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = true;
-        public byte[] Image { get; set; } = null;
+        public int MinimumPlayersRequired { get; set; } = Constants.GameValidation.DefaultMinimumPlayers;
+        public int MaximumPlayersAllowed { get; set; } = Constants.GameValidation.DefaultMaximumPlayers;
+        public string GameDescription { get; set; } = string.Empty;
+        public bool IsGameActive { get; set; } = true;
+        public byte[] GameImage { get; set; } = null;
 
-        public int CurrentUserId { get; set; } = (App.Current as App).CurrentUserID;
+        public int CurrentUserId => currentUserContext.CurrentUserId;
 
-        public CreateGameViewModel(IGameService gameService)
+        public CreateGameViewModel(IGameService gameListingService, ICurrentUserContext currentUserContext)
         {
-            _gameService = gameService;
+            this.gameListingService = gameListingService;
+            this.currentUserContext = currentUserContext;
         }
 
-        public bool ValidateInputs()
+        public List<string> ValidateGameInputs()
         {
-            if (string.IsNullOrWhiteSpace(Name) || Name.Length < 5 || Name.Length > 30)
-                return false;
-            if (Price <= 0)
-                return false;
-            if (MinPlayers < 1)
-                return false;
-            if (MaxPlayers < MinPlayers)
-                return false;
-            if (string.IsNullOrWhiteSpace(Description) || Description.Length < 10 || Description.Length > 500)
-                return false;
-            return true;
+            return GameInputHelper.BuildValidationErrors(
+                GameName,
+                GamePrice,
+                MinimumPlayersRequired,
+                MaximumPlayersAllowed,
+                GameDescription,
+                Constants.GameValidation.MinimumNameLength,
+                Constants.GameValidation.MaximumNameLength,
+                Constants.GameValidation.MinimumAllowedPrice,
+                Constants.GameValidation.MinimumPlayerCount,
+                Constants.GameValidation.MinimumDescriptionLength,
+                Constants.GameValidation.MaximumDescriptionLength);
+        }
+
+        public ViewOperationResult SubmitCreateGame()
+        {
+            var gameValidationErrors = ValidateGameInputs();
+            if (gameValidationErrors.Count > NoValidationErrors)
+            {
+                return ViewOperationResult.Failure(
+                    Constants.DialogTitles.ValidationError,
+                    string.Join(Environment.NewLine, gameValidationErrors));
+            }
+
+            SaveGame();
+            return ViewOperationResult.Success();
+        }
+
+        public void SetGamePriceFromText(string rawPriceText)
+        {
+            if (PriceInputParser.TryParsePriceInput(rawPriceText, out var parsedPriceAsDouble))
+            {
+                GamePriceAsDouble = parsedPriceAsDouble;
+                return;
+            }
+
+            GamePrice = ZeroPriceForEmptyOrInvalidInput;
         }
 
         public GameDTO SaveGame()
         {
-            if (!ValidateInputs()) return null;
-
-            if (Image == null || Image.Length == 0)
+            if (ValidateGameInputs().Count > NoValidationErrors)
             {
-                try
-                {
-                    string defaultImagePath = System.IO.Path.Combine(
-                        System.AppDomain.CurrentDomain.BaseDirectory,
-                        "Assets",
-                        "default-game-placeholder.jpg");
-                    Image = System.IO.File.ReadAllBytes(defaultImagePath);
-                }
-                catch
-                {
-                    Image = new byte[0];
-                }
+                return null;
             }
 
-            var newGameDto = new GameDTO
+            GameImage = GameInputHelper.EnsureImageOrDefault(GameImage, AppDomain.CurrentDomain.BaseDirectory);
+
+            var newGameDataTransferObject = new GameDTO
             {
-                Id = 0,
+                Id = NewGameId,
                 Owner = new UserDTO { Id = CurrentUserId },
-                Name = Name,
-                Price = Price,
-                MinimumPlayerNumber = MinPlayers,
-                MaximumPlayerNumber = MaxPlayers,
-                Description = Description,
-                Image = Image,
-                IsActive = IsActive
+                Name = GameName,
+                Price = GamePrice,
+                MinimumPlayerNumber = MinimumPlayersRequired,
+                MaximumPlayerNumber = MaximumPlayersAllowed,
+                Description = GameDescription,
+                Image = GameImage,
+                IsActive = IsGameActive
             };
 
-            _gameService.AddGame(newGameDto);
-            return newGameDto;
+            gameListingService.AddGame(newGameDataTransferObject);
+            return newGameDataTransferObject;
         }
     }
 }

@@ -1,52 +1,53 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Interface;
-using Property_and_Management.src.Model;
+using Property_and_Management.Src.DataTransferObjects;
+using Property_and_Management.Src.Interface;
+using Property_and_Management.Src.Model;
 
-namespace Property_and_Management.src.Mapper
+namespace Property_and_Management.Src.Mapper
 {
     public class RentalMapper : IMapper<Rental, RentalDTO>
     {
-        private readonly IMapper<Game, GameDTO> _gameMapper;
-        private readonly IMapper<User, UserDTO> _userMapper;
+        private readonly IMapper<Game, GameDTO> rentalGameMapper;
+        private readonly IMapper<User, UserDTO> rentalParticipantUserMapper;
 
         public RentalMapper(IMapper<Game, GameDTO> gameMapper, IMapper<User, UserDTO> userMapper)
         {
-            _gameMapper = gameMapper;
-            _userMapper = userMapper;
+            this.rentalGameMapper = gameMapper;
+            this.rentalParticipantUserMapper = userMapper;
         }
 
-        public RentalDTO ToDTO(Rental entity)
+        public RentalDTO ToDTO(Rental rentalModel)
         {
-            if (entity == null) return null;
+            if (rentalModel == null)
+            {
+                return null;
+            }
 
             return new RentalDTO
             {
-                Id = entity.Id,
-                Game = _gameMapper.ToDTO(entity.Game),
-                Renter = _userMapper.ToDTO(entity.Renter),
-                Owner = _userMapper.ToDTO(entity.Owner),
-                StartDate = entity.StartDate,
-                EndDate = entity.EndDate
+                Id = rentalModel.Id,
+                Game = rentalGameMapper.ToDTO(rentalModel.Game),
+                Renter = rentalParticipantUserMapper.ToDTO(rentalModel.Renter),
+                Owner = rentalParticipantUserMapper.ToDTO(rentalModel.Owner),
+                StartDate = rentalModel.StartDate,
+                EndDate = rentalModel.EndDate
             };
         }
 
-        public Rental ToModel(RentalDTO dto)
+        public Rental ToModel(RentalDTO rentalDto)
         {
-            if (dto == null) return null;
+            if (rentalDto == null)
+            {
+                return null;
+            }
 
             return new Rental
             {
-                Id = dto.Id,
-                Game = _gameMapper.ToModel(dto.Game),
-                Renter = _userMapper.ToModel(dto.Renter),
-                Owner = _userMapper.ToModel(dto.Owner),
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate
+                Id = rentalDto.Id,
+                Game = rentalGameMapper.ToModel(rentalDto.Game),
+                Renter = rentalParticipantUserMapper.ToModel(rentalDto.Renter),
+                Owner = rentalParticipantUserMapper.ToModel(rentalDto.Owner),
+                StartDate = rentalDto.StartDate,
+                EndDate = rentalDto.EndDate
             };
         }
     }

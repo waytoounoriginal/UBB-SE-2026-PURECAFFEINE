@@ -1,100 +1,64 @@
-using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Interface;
+using System.Collections.Immutable;
+using Property_and_Management.Src.DataTransferObjects;
+using Property_and_Management.Src.Interface;
 
-namespace Property_and_Management.src.Viewmodels
+namespace Property_and_Management.Src.Viewmodels
 {
-    public class ListingsViewModel : INotifyPropertyChanged
+    public class ListingsViewModel : PagedViewModel<GameDTO>
     {
-        private readonly IGameService _gameService;
-        private readonly int _currentUserId;
+        private const int NoActiveRentalsCount = 0;
+        private const string DeleteSuccessMessageTemplate =
+            "There are {0} active rentals for this game. It was removed successfully.";
 
-        // We keep a hidden list of all games in memory
-        private ObservableCollection<GameDTO> _allListings = new ObservableCollection<GameDTO>();
+        private readonly IGameService gameListingService;
+        private readonly int currentOwnerUserId;
 
-        // The UI binds to THIS list, which only holds the current page's games
-        public ObservableCollection<GameDTO> PagedListings { get; set; } = new ObservableCollection<GameDTO>();
-
-        // Pagination Properties
-        private int _pageSize = 3; // Change this to show more/less items per page
-        private int _currentPage = 1;
-
-        public int CurrentPage
+        public ListingsViewModel(IGameService gameListingService, int currentOwnerUserId)
         {
-            get => _currentPage;
-            set { _currentPage = value; OnPropertyChanged(); UpdatePagedListings(); }
+            this.gameListingService = gameListingService;
+            this.currentOwnerUserId = currentOwnerUserId;
+            Reload();
         }
 
-        public int PageCount => (int)Math.Ceiling((double)_allListings.Count / _pageSize) == 0 ? 1 : (int)Math.Ceiling((double)_allListings.Count / _pageSize);
+        public void LoadGames() => Reload();
 
-        public string ShowingText => $"Showing {PagedListings.Count} of {_allListings.Count} games";
-
-        public ListingsViewModel(IGameService gameService, int currentUserId)
+        protected override void Reload()
         {
-            _gameService = gameService;
-            _currentUserId = currentUserId;
-            LoadGames();
+            var ownerGameListings = gameListingService.GetGamesForOwner(currentOwnerUserId);
+            SetAllItems(ownerGameListings.ToImmutableList());
         }
 
-        public void LoadGames()
-        {
-            _allListings.Clear();
-            var games = _gameService.GetGamesForOwner(_currentUserId);
+        public override string ShowingText => $"Showing {DisplayedCount} of {TotalCount} games";
 
-            foreach (var game in games)
+        public void DeleteGame(GameDTO gameToDelete)
+        {
+            gameListingService.DeleteGameByIdentifier(gameToDelete.Id);
+            Reload();
+        }
+
+        public ViewOperationResult TryDeleteGame(GameDTO gameToDelete)
+        {
+            try
             {
-                _allListings.Add(game);
+                DeleteGame(gameToDelete);
+                return ViewOperationResult.Success(
+                    Constants.DialogTitles.GameRemoved,
+                    string.Format(DeleteSuccessMessageTemplate, NoActiveRentalsCount));
             }
-
-            CurrentPage = 1; // This automatically calls UpdatePagedListings()
-        }
-
-        private void UpdatePagedListings()
-        {
-            PagedListings.Clear();
-
-            // Skip previous pages, Take the next batch!
-            var pagedData = _allListings.Skip((CurrentPage - 1) * _pageSize).Take(_pageSize);
-
-            foreach (var item in pagedData)
+            catch (System.InvalidOperationException gameHasActiveRentalsException)
             {
-                PagedListings.Add(item);
+                return ViewOperationResult.Failure(
+                    Constants.DialogTitles.CannotDeleteGame,
+                    gameHasActiveRentalsException.Message);
             }
-
-            // Tell the UI to update the text counters
-            OnPropertyChanged(nameof(PageCount));
-            OnPropertyChanged(nameof(ShowingText));
-        }
-
-        public void NextPage()
-        {
-            if (CurrentPage < PageCount) CurrentPage++;
-        }
-
-        public void PrevPage()
-        {
-            if (CurrentPage > 1) CurrentPage--;
-        }
-
-        public void DeleteGame(GameDTO game)
-        {
-            _gameService.DeleteGameById(game.Id);
-            _allListings.Remove(game);
-
-            // If deleting the last item on a page leaves it empty, step back a page
-            if (CurrentPage > PageCount) CurrentPage = PageCount;
-            else UpdatePagedListings(); // Otherwise just refresh the current page
-        }
-
-        // INotifyPropertyChanged implementation for updating text in real-time
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            catch (System.Exception unexpectedException)
+            {
+                return ViewOperationResult.Failure(
+                    Constants.DialogTitles.CannotDeleteGame,
+                    string.IsNullOrWhiteSpace(unexpectedException.Message)
+                        ? Constants.DialogMessages.UnexpectedErrorOccurred
+                        : unexpectedException.Message);
+            }
         }
     }
 }

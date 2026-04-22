@@ -1,43 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Property_and_Management.src.DTO;
-using Property_and_Management.src.Model;
+using Property_and_Management.Src.DataTransferObjects;
 
-namespace Property_and_Management.src.Interface
+namespace Property_and_Management.Src.Interface
 {
     public interface IRentalService
     {
-        /// <summary>
-        /// Returns ImmutableList<RentalDTO> of all rentals where the user is the renter.
-        /// </summary>
-        /// <param name="renterId"></param>
-        /// <returns></returns>
-        ImmutableList<RentalDTO> GetRentalsForRenter(int renterId);
+        ImmutableList<RentalDTO> GetRentalsForRenter(int renterUserId);
 
-        /// <summary>
-        /// Returns ImmutableList<RentalDTO> of all rentals where the user is the owner.
-        /// </summary>
-        /// <param name="ownerId"></param>
-        /// <returns></returns>
-        ImmutableList<RentalDTO> GetRentalsForOwner(int ownerId);
+        ImmutableList<RentalDTO> GetRentalsForOwner(int ownerUserId);
 
-        /// <summary>
-        /// Returns bool indicating whether the time slot is available for the given game.
-        /// </summary>
-        /// <param name="gameId"></param>
-        /// <param name="newStart"></param>
-        /// <param name="newEnd"></param>
-        /// <returns></returns>
-        bool IsSlotAvailable(int gameId, DateTime newStart, DateTime newEnd);
+        bool IsSlotAvailable(int gameId, DateTime requestedStartDate, DateTime requestedEndDate);
 
-        /// <summary>
-        /// Creates a rental
-        /// </summary>
-        /// <param name="rental"></param>
-        public void CreateConfirmedRental(Rental rental);
+        void CreateConfirmedRental(int gameId, int renterUserId, int ownerUserId, DateTime startDate, DateTime endDate);
     }
 }

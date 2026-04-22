@@ -1,24 +1,24 @@
-using System;
-using System.Collections.Generic;
-using Property_and_Management.src.Interface;
+﻿using Property_and_Management.Src.Interface;
 
-namespace Property_and_Management.src.Model
+namespace Property_and_Management.Src.Model
 {
     public class User : IEntity
     {
         public int Id { get; set; }
         public string DisplayName { get; set; }
 
-        public User() { }
+        public User()
+        {
+        }
 
         public User(int id)
         {
-            Id = id;
+            this.Id = id;
         }
 
         public User(int id, string displayName)
         {
-            Id = id;
+            this.Id = id;
             DisplayName = displayName;
         }
     }

@@ -1,0 +1,3 @@
+# BoardRent development configuration
+# Set to true to launch two app windows (User 1 + User 2) when running from Visual Studio
+TWO_WINDOWS=true

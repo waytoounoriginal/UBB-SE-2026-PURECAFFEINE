@@ -16,18 +16,13 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using WinRT.Interop;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace Property_and_Management
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class MainWindow : Window
     {
+        private const int SuccessExitCode = 0;
 
-        public AppWindow AppWindow { get; }
+        public new AppWindow AppWindow { get; }
 
         public MainWindow()
         {
@@ -35,20 +30,17 @@ namespace Property_and_Management
 
             AppWindow = GetAppWindow();
 
-            // override closing
             AppWindow.Closing += (sender, args) =>
             {
-                args.Cancel = true;
-                AppWindow.Hide();
+                Environment.Exit(SuccessExitCode);
             };
         }
 
         private AppWindow GetAppWindow()
         {
-
-            var hwnd = WindowNative.GetWindowHandle(this);
-            var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
-            return AppWindow.GetFromWindowId(windowId);
+            var mainWindowHandle = WindowNative.GetWindowHandle(this);
+            var mainWindowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(mainWindowHandle);
+            return AppWindow.GetFromWindowId(mainWindowId);
         }
     }
 }

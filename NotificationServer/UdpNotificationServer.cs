@@ -1,121 +1,124 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Formats.Tar;
-using System.Linq;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.VisualBasic;
 using ServerCommunication;
 
 namespace NotificationServer
 {
     internal class UdpNotificationServer
     {
-        private const int DEFAULT_PORT = 4544;
+        private const int DefaultServerPortNumber = 4544;
+        private const string NotSubscribedEndpointDescription = "not subscribed";
 
-        private static UdpClient? _udpClient;
+        private static UdpClient? notificationServerUdpClient;
 
-        private static Dictionary<int, IPEndPoint> _userIpMap = [];
+        private static readonly Dictionary<int, IPEndPoint> UserEndpointByIdentifierMap = [];
 
-        private static async Task SendMessage(int userId, MessageBase unwrappedMessageToSend)
+        private static async Task SendMessageToSubscribedUser(int destinationUserIdentifier, MessageBase notificationMessagePayload)
         {
-            if (_udpClient == null)
+            if (notificationServerUdpClient == null)
             {
-                throw new NullReferenceException(nameof(_udpClient));
+                throw new NullReferenceException(nameof(notificationServerUdpClient));
             }
 
-            if (!_userIpMap.TryGetValue(userId, out var endpoint))
+            if (!UserEndpointByIdentifierMap.TryGetValue(destinationUserIdentifier, out var destinationUserEndpoint))
             {
-                throw new InvalidDataException("UserId was not present in the map");
+                throw new InvalidDataException("Target user id was not present in the endpoint map.");
             }
 
-            byte[] data = CommunicationHelper.SerializeMessage(unwrappedMessageToSend);
-            await _udpClient.SendAsync(data, data.Length, endpoint);
+            byte[] serializedMessageBytes = CommunicationHelper.SerializeMessage(notificationMessagePayload);
+            await notificationServerUdpClient.SendAsync(serializedMessageBytes, serializedMessageBytes.Length, destinationUserEndpoint);
         }
 
-        private static void HandleSubscribeToServerMessage(IPEndPoint recivedEndPoint, MessageWrapper recivedMessage)
+        private static void HandleSubscribeToServerMessagePacket(IPEndPoint receivedRemoteEndpoint, MessageWrapper receivedMessageWrapper)
         {
-            SubscribeToServerMessage? message = recivedMessage.Deserialize<SubscribeToServerMessage>();
+            SubscribeToServerMessage? userSubscriptionMessagePayload = receivedMessageWrapper.Deserialize<SubscribeToServerMessage>();
 
-            if (message == null)
+            if (userSubscriptionMessagePayload == null)
             {
                 throw new InvalidCastException("Expected message was not " + nameof(SubscribeToServerMessage));
             }
 
-            _userIpMap[message.UserId] = recivedEndPoint;
-            Console.WriteLine($"{message.UserId} -> {recivedEndPoint.Address}:{recivedEndPoint.Port}");
+            UserEndpointByIdentifierMap[userSubscriptionMessagePayload.UserId] = receivedRemoteEndpoint;
+            Console.WriteLine($"{userSubscriptionMessagePayload.UserId} -> {receivedRemoteEndpoint.Address}:{receivedRemoteEndpoint.Port}");
         }
 
-        private static async Task HandleSendNotificationMessage(MessageWrapper recivedMessage)
+        private static async Task HandleSendNotificationMessagePacket(MessageWrapper receivedMessageWrapper)
         {
-            SendNotificationMessage? unwrappedMessage = recivedMessage.Deserialize<SendNotificationMessage>();
+            SendNotificationMessage? outboundNotificationMessagePayload = receivedMessageWrapper.Deserialize<SendNotificationMessage>();
 
-            if (unwrappedMessage == null)
+            if (outboundNotificationMessagePayload == null)
             {
                 throw new InvalidCastException("Expected message was not " + nameof(SendNotificationMessage));
             }
 
-            Console.WriteLine($"Sending notification to user: {unwrappedMessage.UserId}({_userIpMap[unwrappedMessage.UserId]}) [{unwrappedMessage.Title} - {unwrappedMessage.Body}]");
+            var deliveryEndpointDiagnosticDescription = UserEndpointByIdentifierMap.TryGetValue(outboundNotificationMessagePayload.UserId, out var subscribedUserEndpoint)
+                ? subscribedUserEndpoint.ToString()
+                : NotSubscribedEndpointDescription;
 
-            // Resend the UDP packet to the user id
-            await SendMessage(unwrappedMessage.UserId, unwrappedMessage);
+            Console.WriteLine(
+                $"Sending notification to user: {outboundNotificationMessagePayload.UserId}({deliveryEndpointDiagnosticDescription}) " +
+                $"[{outboundNotificationMessagePayload.Title} - {outboundNotificationMessagePayload.Body}]");
+
+            await SendMessageToSubscribedUser(outboundNotificationMessagePayload.UserId, outboundNotificationMessagePayload);
         }
 
-        private static async Task HandleMessagePacket(IPEndPoint recivedEndPoint, MessageWrapper recivedMessageWrapper)
+        private static async Task HandleIncomingMessagePacket(IPEndPoint receivedRemoteEndpoint, MessageWrapper receivedMessageWrapper)
         {
-            Console.WriteLine($"Got: {recivedMessageWrapper.Type}");
+            Console.WriteLine($"Got: {receivedMessageWrapper.Type}");
             try
             {
-                switch (recivedMessageWrapper.Type)
+                switch (receivedMessageWrapper.Type)
                 {
-                    case nameof(SubscribeToServerMessage): HandleSubscribeToServerMessage(recivedEndPoint, recivedMessageWrapper); break;
-                    case nameof(SendNotificationMessage): await HandleSendNotificationMessage(recivedMessageWrapper); break;
-                    default: throw new InvalidDataException(recivedMessageWrapper.Type);
+                    case nameof(SubscribeToServerMessage):
+                        HandleSubscribeToServerMessagePacket(receivedRemoteEndpoint, receivedMessageWrapper);
+                        break;
+                    case nameof(SendNotificationMessage):
+                        await HandleSendNotificationMessagePacket(receivedMessageWrapper);
+                        break;
+                    default:
+                        throw new InvalidDataException(receivedMessageWrapper.Type);
                 }
             }
-            catch (Exception exception)
+            catch (Exception caughtServerException)
             {
-                Console.WriteLine($"Recived exception while handling message: {exception.Message}");
+                Console.WriteLine($"Received exception while handling message: {caughtServerException.Message}");
             }
-
         }
 
-        public static async Task ListenAsync(CancellationToken cancellationToken, int port = DEFAULT_PORT)
+        public static async Task ListenAsync(CancellationToken listenerShutdownCancellationToken, int udpListenPortNumber = DefaultServerPortNumber)
         {
             try
             {
-                _udpClient = new UdpClient(port);
-                Console.WriteLine($"UDP Server listening on  port {port}");
+                notificationServerUdpClient = new UdpClient(udpListenPortNumber);
+                Console.WriteLine($"UDP server listening on port {udpListenPortNumber}");
             }
-            catch (Exception e)
+            catch (Exception caughtServerException)
             {
-                Console.WriteLine($"ERROR: {e.Message}");
-                Environment.Exit((int)ServerErrors.SERVER_FAILED_INIT);
+                Console.WriteLine($"ERROR: {caughtServerException.Message}");
+                Environment.Exit((int)ServerErrors.FailedToInitializeServer);
             }
 
             Console.WriteLine("Starting listener...");
 
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                while (!listenerShutdownCancellationToken.IsCancellationRequested)
                 {
-                    // Recive the serialized object
-                    UdpReceiveResult result = await _udpClient.ReceiveAsync(cancellationToken);
+                    UdpReceiveResult receivedUdpPacketResult = await notificationServerUdpClient.ReceiveAsync(listenerShutdownCancellationToken);
 
-                    // Deserialize
-                    MessageWrapper? recivedObject = CommunicationHelper.GetMessageWrapper(result.Buffer);
+                    MessageWrapper? receivedMessageWrapper = CommunicationHelper.GetMessageWrapper(receivedUdpPacketResult.Buffer);
 
-                    // If null drop the message, print a message
-                    if (recivedObject == null)
+                    if (receivedMessageWrapper == null)
                     {
-                        Console.WriteLine($"Null message recived from json: {Encoding.UTF8.GetString(result.Buffer)}");
+                        Console.WriteLine($"Null message received from json: {Encoding.UTF8.GetString(receivedUdpPacketResult.Buffer)}");
                         continue;
                     }
 
-                    await HandleMessagePacket(result.RemoteEndPoint, recivedObject);
+                    await HandleIncomingMessagePacket(receivedUdpPacketResult.RemoteEndPoint, receivedMessageWrapper);
                 }
             }
             catch (OperationCanceledException)
@@ -128,15 +131,14 @@ namespace NotificationServer
             }
             finally
             {
-                _udpClient?.Close();
+                notificationServerUdpClient?.Close();
             }
         }
 
         public static void Stop()
         {
-            _udpClient?.Close();
-            _udpClient = null;
+            notificationServerUdpClient?.Close();
+            notificationServerUdpClient = null;
         }
-
     }
 }
